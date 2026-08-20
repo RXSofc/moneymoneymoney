@@ -73,6 +73,6 @@ If you find it useful or end up building something cool with it, I'd be happy to
 [![HTML](https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white)](.)
 [![CSS](https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white)](.)
 [![JS](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black)](.)
-[![Built with Cloudflare](https://workers.cloudflare.com/built-with-cloudflare.svg)]([https://cloudflare.com](https://moneymoneymoney.rxsofc.workers.dev/))
+[![Built with Cloudflare](https://workers.cloudflare.com/built-with-cloudflare.svg)](https://moneymoneymoney.rxsofc.workers.dev/)
 
 
