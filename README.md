@@ -30,13 +30,14 @@ $$Features
 
 ## File Structure
 
-...
+```
 duitku/
-├── index.html                    ← markup only
-├── css/style.css                 ← all styling
-├── js/script.js                  ← all logic
+├── index.html                    ← markup doang
+├── css/style.css                 ← semua styling
+├── js/script.js                  ← semua logic
 ├── assets/demo.gif
-...
+└── index-single-file-backup.html ← versi semuanya jadi satu file, buat jaga-jaga
+```
 
 That's it.
 Your data is automatically stored in the browser.
