@@ -1,4 +1,4 @@
-#DuitKu
+# DuitKu
 
 A simple daily money tracker I made because I got tired of jumping between finance apps that are full of ads, lock basic features like "export data" behind subscriptions, or store my data on some random server somewhere.
 
@@ -6,15 +6,11 @@ DuitKu takes the opposite approach: your data stays on your own device using "lo
 
 It's basically one HTML file (plus separate CSS/JS if you prefer keeping things organized like this repo). No build step, no "npm install", no framework. Open it in a browser and you're good to go.
 
-"DuitKu Demo" (assets/demo.gif)
+![DuitKu Demo](assets/demo.gif)
 
-Why It's Built This Way
+## Why It's Built This Way
 
 It started as a simple side project — I just wanted a lightweight place to track money coming in, going out, and savings without a bunch of setup or unnecessary complexity.
-
-But after actually using it every day, I started thinking: what happens if I lose my phone or switch to another device?
-
-That's where Google Sheets sync came in.
 
 The sync is intentionally one-way (app → Sheet, not the other way around). The reason is pretty simple: fewer moving parts means fewer things that can go wrong, and there's less chance of your data getting messed up because of sync conflicts.
 
@@ -22,7 +18,7 @@ So DuitKu isn't really a "cloud-first" app that insists on being online all the 
 
 Think of it more like a notebook that happens to be able to copy its contents to Google Sheets whenever you want.
 
-Features
+$$Features
 
 - Track income, expenses, and savings — each as its own category instead of just "in/out"
 - Balance summary + a 6-month cash flow chart
@@ -32,29 +28,20 @@ Features
 - Fully works offline — Google Sheets is optional, not required
 - Matte dark theme with maroon accents, mixing neobrutalism with a more modern touch (thick borders + offset shadows, without going overboard)
 
-File Structure
+## File Structure
 
+...
 duitku/
 ├── index.html                    ← markup only
 ├── css/style.css                 ← all styling
 ├── js/script.js                  ← all logic
 ├── assets/demo.gif
-└── index-single-file-backup.html ← everything in one file, just in case
-
-If you're hosting it somewhere that only lets you serve a single file (WhatsApp, Telegram, etc.), use "index-single-file-backup.html".
-
-If you're hosting it on GitHub Pages or an actual web server, use "index.html" together with the "css" and "js" folders.
-
-How to Use It (Without Sheets)
-
-Open "index.html".
+...
 
 That's it.
-
 Your data is automatically stored in the browser.
 
-Connecting Google Sheets
-
+## How to Connecting to Google Sheets??
 This is probably the part where people are most likely to get stuck, so here's the detailed version:
 
 1. Open "sheets.new" (https://sheets.new) and create a new Google Sheet.
@@ -65,36 +52,18 @@ This is probably the part where people are most likely to get stuck, so here's t
 6. Test the connection using the Test Connection button before sending any actual data.
 
 Not sure if the connection is working?
-
 Paste the "/exec" URL directly into your browser's address bar.
-
 If you get something like:
-
 {"ok":true,...}
-
 you're good.
-
 If you get an error, it's usually related to step 2 (the script isn't properly bound to the Sheet) or step 4 (access isn't set to Anyone).
-
 Things You Should Know (So You Don't Get Surprised)
 
-I'm gonna be honest here instead of pretending everything is perfect:
-
-- Sync is one-way and "blind." DuitKu uses "mode:no-cors" to avoid dealing with Apps Script CORS headaches, which means the app can't read the server's response. So when you see a "success" toast, it basically means "the request was sent", not a 100% guarantee that the data was actually saved. If you're unsure, check the Sheet directly.
-- Syncing multiple times is safe. Every transaction gets a unique ID when it's created. The Apps Script "doPost" checks whether that ID already exists in the Sheet before adding a new row. So hitting Sync twice (or having autoSync enabled while manually syncing) won't create duplicate rows.
-- Data is device-specific. "localStorage" isn't tied to your Google account or anything like that. Switch phones and your local data won't magically follow you. You'll need to set up the Sheet URL again. The Sheet is only used as a storage destination — the app doesn't pull your data back from it.
-- Private by default, not because there's a login system. Your data simply never leaves your device unless you explicitly push it somewhere. That said, don't share your "/exec" URL with random people, because anyone who has it can write to your Sheet (not read from it).
-
-Stack
-
+## Stack
 Vanilla JS, vanilla CSS, and a single HTML file.
-
 Google Apps Script handles the sync backend (it's not really a backend — more like a bridge between the app and Google Sheets).
-
 No dependencies, no "package.json", and nothing to "npm install".
 
-License
-
+## License
 Use it, modify it, mess around with it — whatever.
-
 If you find it useful or end up building something cool with it, I'd be happy to hear about it.
