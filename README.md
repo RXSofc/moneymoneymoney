@@ -1,70 +1,100 @@
-# DuitKu
+#DuitKu
 
-Aplikasi catat uang harian yang gue bikin karena capek pindah-pindah antara app pencatatan keuangan yang isinya iklan, minta langganan buat fitur "export data" doang, atau ujung-ujungnya data gue disimpen di server orang entah kemana. DuitKu kebalikannya: data lo nempel di HP lo sendiri (localStorage), dan kalau mau backup, lo yang pegang kendali penuh — nyambungin ke Google Sheets lo sendiri, bukan Sheets punya siapa-siapa.
+A simple daily money tracker I made because I got tired of jumping between finance apps that are full of ads, lock basic features like "export data" behind subscriptions, or store my data on some random server somewhere.
 
-Satu file HTML doang (plus CSS/JS-nya kalau lo pisahin kayak repo ini). Gak ada build step, gak ada `npm install`, gak ada framework. Buka di browser, langsung jalan.
+DuitKu takes the opposite approach: your data stays on your own device using "localStorage". And when you want a backup, you're in full control — you can connect it to your own Google Sheet, not someone else's.
 
-![Demo DuitKu](assets/demo.gif)
+It's basically one HTML file (plus separate CSS/JS if you prefer keeping things organized like this repo). No build step, no "npm install", no framework. Open it in a browser and you're good to go.
 
-## Kenapa arsitekturnya kayak gini
+"DuitKu Demo" (assets/demo.gif)
 
-Awalnya iseng doang — mau punya tempat nyatet uang masuk/keluar/nabung yang gak berat dan gak ribet setup-nya. Tapi begitu kepake beneran sehari-hari, mulai kepikiran: kalau HP ilang atau ganti device gimana? Dari situ nambahin opsi sync ke Google Sheets, tapi sengaja **satu arah** (app → Sheet, bukan dua arah). Alasannya simpel: makin sedikit yang bisa salah, makin gak gampang data lo berantakan gara-gara konflik sync.
+Why It's Built This Way
 
-Efeknya, ini bukan aplikasi "cloud-first" yang keukeuh mau selalu online. Ini lebih ke buku catatan yang kebetulan bisa nyalin isinya ke Sheets kapan pun lo mau.
+It started as a simple side project — I just wanted a lightweight place to track money coming in, going out, and savings without a bunch of setup or unnecessary complexity.
 
-## Fitur
+But after actually using it every day, I started thinking: what happens if I lose my phone or switch to another device?
 
-- Catat pemasukan, pengeluaran, sama tabungan — masing-masing kategori sendiri (bukan cuma "masuk/keluar" doang)
-- Ringkasan saldo + grafik arus uang 6 bulan terakhir
-- Filter riwayat per kategori, sama pencarian
-- Sync ke Google Sheets pake Apps Script punya lo sendiri (gratis, gak perlu server tambahan)
-- Export CSV kalau males buka Sheets
-- Kerja offline penuh — Sheets itu opsional, bukan wajib
-- Tema gelap matte + aksen merah maroon, neobrutalism dicampur sama sentuhan modern (border tebel + shadow offset, tapi gak kaku-kaku amat)
+That's where Google Sheets sync came in.
 
-## Struktur file
+The sync is intentionally one-way (app → Sheet, not the other way around). The reason is pretty simple: fewer moving parts means fewer things that can go wrong, and there's less chance of your data getting messed up because of sync conflicts.
 
-```
+So DuitKu isn't really a "cloud-first" app that insists on being online all the time.
+
+Think of it more like a notebook that happens to be able to copy its contents to Google Sheets whenever you want.
+
+Features
+
+- Track income, expenses, and savings — each as its own category instead of just "in/out"
+- Balance summary + a 6-month cash flow chart
+- Filter transaction history by category and search through it
+- Sync to Google Sheets using your own Google Apps Script (free, no extra server required)
+- Export to CSV if you don't feel like opening Google Sheets
+- Fully works offline — Google Sheets is optional, not required
+- Matte dark theme with maroon accents, mixing neobrutalism with a more modern touch (thick borders + offset shadows, without going overboard)
+
+File Structure
+
 duitku/
-├── index.html                    ← markup doang
-├── css/style.css                 ← semua styling
-├── js/script.js                  ← semua logic
+├── index.html                    ← markup only
+├── css/style.css                 ← all styling
+├── js/script.js                  ← all logic
 ├── assets/demo.gif
-└── index-single-file-backup.html ← versi semuanya jadi satu file, buat jaga-jaga
-```
+└── index-single-file-backup.html ← everything in one file, just in case
 
-Kalau lo host di tempat yang cuma bisa nge-serve satu file (WhatsApp, Telegram, dsb), pake yang `index-single-file-backup.html`. Kalau host di GitHub Pages / server beneran, pake `index.html` + folder `css`/`js`-nya.
+If you're hosting it somewhere that only lets you serve a single file (WhatsApp, Telegram, etc.), use "index-single-file-backup.html".
 
-## Cara pake (tanpa Sheets)
+If you're hosting it on GitHub Pages or an actual web server, use "index.html" together with the "css" and "js" folders.
 
-Buka `index.html`. Selesai. Data lo kesimpen otomatis di browser.
+How to Use It (Without Sheets)
 
-## Cara nyambungin ke Google Sheets
+Open "index.html".
 
-Ini bagian yang paling sering bikin orang stuck, jadi gue tulis detail:
+That's it.
 
-1. Buka [sheets.new](https://sheets.new) buat bikin Sheet baru.
-2. Di dalam Sheet itu (**bukan** dari script.google.com langsung) — klik **Extensions → Apps Script**. Ini penting: script harus dibikin dari dalam Sheet-nya biar otomatis "nempel" ke file yang bener.
-3. Hapus kode default, buka **⚙️ Pengaturan** di app DuitKu, klik **Salin Kode**, tempel di editor.
-4. **Deploy → New deployment** → tipe **Web app** → *Execute as*: **Me**, *Who has access*: **Anyone**.
-5. Salin URL yang berakhiran `/exec`, tempel di kolom URL Web App di Pengaturan, simpen.
-6. Tes dulu pake tombol **Tes Koneksi** sebelum ngirim data beneran.
+Your data is automatically stored in the browser.
 
-Kalau ragu koneksinya jalan apa nggak, paste URL `/exec`-nya langsung ke address bar browser. Kalau muncul JSON `{"ok":true,...}`, aman. Kalau error, itu biasanya soal langkah 2 (script gak ke-bind ke Sheet yang bener) atau langkah 4 (izin akses belum "Anyone").
+Connecting Google Sheets
 
-## Hal-hal yang perlu lo tau (biar gak kaget)
+This is probably the part where people are most likely to get stuck, so here's the detailed version:
 
-Gue jujur aja di sini, gak mau sok sempurna:
+1. Open "sheets.new" (https://sheets.new) and create a new Google Sheet.
+2. Inside that Sheet (not directly from script.google.com), go to Extensions → Apps Script. This matters because the script needs to be created from the Sheet itself so it is automatically bound to the correct file.
+3. Delete the default code, open ⚙️ Settings in DuitKu, click Copy Code, and paste it into the Apps Script editor.
+4. Go to Deploy → New deployment → choose Web app → set Execute as to Me and Who has access to Anyone.
+5. Copy the URL ending in "/exec", paste it into the Web App URL field in DuitKu's Settings, then save it.
+6. Test the connection using the Test Connection button before sending any actual data.
 
-- **Sync itu satu arah dan "buta".** Karena pake `mode:no-cors` (biar gak ribet urusan CORS Apps Script), app gak bisa baca respons server. Toast "berhasil" itu artinya "berhasil terkirim", bukan jaminan "berhasil kesimpen". Kalau ragu, cek Sheets-nya langsung.
-- **Gak ada dedup.** Sync/kirim data yang sama dua kali = dua baris di Sheet. Belum ada logic buat nge-skip yang udah pernah dikirim.
-- **Data itu per-device.** localStorage gak ngikutin akun Google atau apapun — pindah HP, ya kosong lagi, harus setting ulang URL Sheets-nya. Sheets cuma tempat nampung, bukan tempat app-nya narik data balik.
-- **Private by default, bukan karena ada sistem login** — tapi karena datanya emang gak pernah ninggalin device lo kecuali lo sendiri yang push. Jangan share URL `/exec` lo ke orang random, karena siapa pun yang punya itu bisa nulis (bukan baca) ke Sheet lo.
+Not sure if the connection is working?
 
-## Stack
+Paste the "/exec" URL directly into your browser's address bar.
 
-Vanilla JS, vanilla CSS, satu file HTML. Google Apps Script buat backend sync-nya (bukan backend beneran, cuma jembatan ke Sheets). Gak ada dependency, gak ada `package.json`, gak ada yang perlu di-`npm install`.
+If you get something like:
 
-## Lisensi
+{"ok":true,...}
 
-Pake aja, ubah aja, sesuka lo. Kalau ada yang kepake dan berguna, seneng aja gue dengernya.
+you're good.
+
+If you get an error, it's usually related to step 2 (the script isn't properly bound to the Sheet) or step 4 (access isn't set to Anyone).
+
+Things You Should Know (So You Don't Get Surprised)
+
+I'm gonna be honest here instead of pretending everything is perfect:
+
+- Sync is one-way and "blind." DuitKu uses "mode:no-cors" to avoid dealing with Apps Script CORS headaches, which means the app can't read the server's response. So when you see a "success" toast, it basically means "the request was sent", not a 100% guarantee that the data was actually saved. If you're unsure, check the Sheet directly.
+- Syncing multiple times is safe. Every transaction gets a unique ID when it's created. The Apps Script "doPost" checks whether that ID already exists in the Sheet before adding a new row. So hitting Sync twice (or having autoSync enabled while manually syncing) won't create duplicate rows.
+- Data is device-specific. "localStorage" isn't tied to your Google account or anything like that. Switch phones and your local data won't magically follow you. You'll need to set up the Sheet URL again. The Sheet is only used as a storage destination — the app doesn't pull your data back from it.
+- Private by default, not because there's a login system. Your data simply never leaves your device unless you explicitly push it somewhere. That said, don't share your "/exec" URL with random people, because anyone who has it can write to your Sheet (not read from it).
+
+Stack
+
+Vanilla JS, vanilla CSS, and a single HTML file.
+
+Google Apps Script handles the sync backend (it's not really a backend — more like a bridge between the app and Google Sheets).
+
+No dependencies, no "package.json", and nothing to "npm install".
+
+License
+
+Use it, modify it, mess around with it — whatever.
+
+If you find it useful or end up building something cool with it, I'd be happy to hear about it.
