@@ -67,3 +67,5 @@ No dependencies, no "package.json", and nothing to "npm install".
 ## License
 Use it, modify it, mess around with it — whatever.
 If you find it useful or end up building something cool with it, I'd be happy to hear about it.
+
+# EvilVoid Team -- @rixs4K -- 003
