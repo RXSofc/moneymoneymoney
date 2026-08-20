@@ -35,8 +35,7 @@ duitku/
 ├── index.html                    ← markup doang
 ├── css/style.css                 ← semua styling
 ├── js/script.js                  ← semua logic
-├── assets/demo.gif
-└── index-single-file-backup.html ← versi semuanya jadi satu file, buat jaga-jaga
+└── assets/demo.gif
 ```
 
 That's it.
