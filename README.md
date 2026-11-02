@@ -76,3 +76,32 @@ If you find it useful or end up building something cool with it, I'd be happy to
 # EvilVoid Team -- @rixs4K -- 003
 
 
+
+## Karakter 3D di card "Keluar & Tabungan"
+
+Card ini punya panel miring di kiri berisi karakter 3D (`assets/source/character.glb`). Di browser **tidak ada WebGL/library 3D**:
+model dirender sekali menjadi 13 frame WebP transparan (`assets/char/f-0.webp` ... `f-12.webp`, total sekitar 280 KB) yang
+berisi putaran kepala dari kiri ke kanan. Karakter "menoleh" dengan memilih frame yang sesuai:
+
+- mengikuti **jari** saat card di-swipe, dan menoleh cepat saat ganti tab Pengeluaran/Tabungan
+- mengikuti **kursor** di desktop, dan goyang pelan saat diam
+- berhenti bergerak kalau card tidak terlihat, tab browser disembunyikan, atau user memakai *reduce motion*
+- kalau frame tidak ada, card otomatis kembali ke layout penuh tanpa panel
+
+### Mengganti karakter
+
+1. Timpa `assets/source/character.glb` dengan model baru (format GLB).
+2. Jalankan tool render (sekali saja, butuh Node.js):
+   ```bash
+   cd tools/render-frames
+   npm install
+   npx playwright install chromium
+   npm run render
+   ```
+3. Frame baru otomatis ditulis ke `assets/char/`. Kalau jumlah frame diubah, samakan `data-frames` pada `<canvas id="splitArt">` di `index.html`.
+
+Pengaturan render (sudut putar, jarak kamera, area crop, jumlah frame, kualitas) ada di bagian `CONFIG` pada `tools/render-frames/render.mjs`.
+Hasil render otomatis dijadikan hitam-putih agar tema monokrom tetap konsisten. Tampilan panel (lebar, kemiringan, ukuran karakter)
+diatur lewat `--panel-w` dan `--slant` di `.split-card` pada `css/style.css`.
+
+> Folder `tools/render-frames/node_modules` tidak perlu di-commit ke GitHub (tambahkan ke `.gitignore`).

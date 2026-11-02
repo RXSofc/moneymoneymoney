@@ -2,9 +2,8 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>DuitKu — Catatan Uang & Tabungan</title>
-<link rel="icon" type="image/x-icon" href="/assets/logo.jpeg">
 <meta name="description" content="Catat pemasukan, tabungan, dan pengeluaranmu. Sinkron ke Google Sheets.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,6 +11,22 @@
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+
+<!-- SVG ICON SPRITE (no emoji, no external icon font — just plain geometric paths) -->
+<svg class="icon-defs" aria-hidden="true" focusable="false">
+  <symbol id="ic-down" viewBox="0 0 24 24"><path d="M12 4v15M12 19l-6-6M12 19l6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ic-up" viewBox="0 0 24 24"><path d="M12 20V5M12 5l-6 6M12 5l6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ic-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="12" cy="12" r="3.4" fill="currentColor"/></symbol>
+  <symbol id="ic-gear" viewBox="0 0 24 24"><path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19.4 13.6a7.6 7.6 0 0 0 0-3.2l2-1.4-2-3.4-2.3.9a7.6 7.6 0 0 0-2.8-1.6L14 2.5h-4l-.3 2.4a7.6 7.6 0 0 0-2.8 1.6l-2.3-.9-2 3.4 2 1.4a7.6 7.6 0 0 0 0 3.2l-2 1.4 2 3.4 2.3-.9a7.6 7.6 0 0 0 2.8 1.6l.3 2.4h4l.3-2.4a7.6 7.6 0 0 0 2.8-1.6l2.3.9 2-3.4-2-1.4Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+  <symbol id="ic-sync" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.3-4.9M4 13a8 8 0 0 0 14.3 4.9" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/><path d="M5 2v4.5H9.5M19 22v-4.5H14.5" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ic-plus" viewBox="0 0 24 24"><path d="M12 4v16M4 12h16" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+  <symbol id="ic-x" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+  <symbol id="ic-receipt" viewBox="0 0 24 24"><path d="M6 2.5h12v19l-2.2-1.5L13.6 21l-1.6-1.5L10.4 21l-2.2-1.5L6 21.5v-19Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 8h6M9 12h6M9 16h3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+  <symbol id="ic-arrow-r" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ic-chevron" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ic-chevron-l" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ic-calendar" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="16" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 9.5h17M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+</svg>
 
 <div class="ticker" aria-hidden="true">
   <div class="ticker-track" id="tickerTrack"></div>
@@ -27,9 +42,9 @@
       </div>
     </a>
     <div class="header-actions">
-      <span class="sync-dot" id="syncDot"><i></i><span id="syncDotText">Sheets belum terhubung</span></span>
-      <button class="btn btn-maroon" id="btnSyncNow" type="button">&#8635; Sync</button>
-      <button class="btn" id="btnSettings" type="button">&#9881; Sheets</button>
+      <span class="sync-dot" id="syncDot"><i></i><span id="syncDotText">Belum terhubung</span></span>
+      <button class="btn btn-primary btn-icon-label" id="btnSyncNow" type="button"><svg class="icon" width="16" height="16"><use href="#ic-sync"/></svg><span>Sync</span></button>
+      <button class="btn btn-icon" id="btnSettings" type="button" aria-label="Pengaturan Sheets"><svg class="icon" width="18" height="18"><use href="#ic-gear"/></svg></button>
     </div>
   </div>
 </header>
@@ -40,18 +55,70 @@
     <!-- HERO SALDO -->
     <section class="card hero">
       <svg class="hero-deco" viewBox="0 0 100 100" fill="none" aria-hidden="true">
-        <path d="M50 0 L58 42 L100 50 L58 58 L50 100 L42 58 L0 50 L42 42 Z" fill="#F7F2EC"/>
+        <path d="M50 0 L58 42 L100 50 L58 58 L50 100 L42 58 L0 50 L42 42 Z" fill="currentColor"/>
       </svg>
-      <div>
-        <span class="card-label">Saldo Tersedia</span>
-        <div class="hero-amount" id="heroAmount">Rp 0</div>
-      </div>
+      <span class="card-label">Saldo Tersedia</span>
+      <div class="hero-amount" id="heroAmount">Rp 0</div>
       <div class="hero-sub">
-        <div><b id="heroMonthIn">Rp 0</b><span>Masuk bulan ini</span></div>
-        <div><b id="heroMonthOut">Rp 0</b><span>Keluar bulan ini</span></div>
-        <div><b id="heroCount">0</b><span>Total catatan</span></div>
+        <div class="hero-sub-item">
+          <svg class="icon" width="13" height="13"><use href="#ic-down"/></svg>
+          <span class="hero-sub-val" id="heroMonthIn">Rp 0</span>
+          <span class="hero-sub-lbl">masuk bulan ini</span>
+        </div>
+        <div class="hero-sub-item">
+          <svg class="icon" width="13" height="13"><use href="#ic-up"/></svg>
+          <span class="hero-sub-val" id="heroMonthOut">Rp 0</span>
+          <span class="hero-sub-lbl">keluar bulan ini</span>
+        </div>
       </div>
-      <div class="hero-coin" aria-hidden="true">Rp</div>
+    </section>
+
+    <!-- EXPENSE / SAVINGS SPLIT (swipeable) -->
+    <section class="card split-card" id="splitCard">
+      <!-- Karakter 3D: frame hasil render di assets/char/ (lihat tools/render-frames/ untuk mengganti model) -->
+      <div class="split-stage" aria-hidden="true">
+        <canvas class="split-art" id="splitArt" width="560" height="490" data-frames="13" data-src="assets/char/f-{i}.webp"></canvas>
+      </div>
+      <div class="split-body">
+      <div class="split-head">
+        <div>
+          <span class="card-label">Keluar &amp; Tabungan</span>
+          <h2>Dua Hal yang Beda</h2>
+        </div>
+        <div class="segctl" role="tablist" aria-label="Tampilkan">
+          <button class="seg-btn active" role="tab" aria-selected="true" data-panel="0" type="button">Pengeluaran</button>
+          <button class="seg-btn" role="tab" aria-selected="false" data-panel="1" type="button">Tabungan</button>
+        </div>
+      </div>
+
+      <div class="split-viewport" id="splitViewport">
+        <div class="split-track" id="splitTrack">
+
+          <div class="split-panel" data-panel="0">
+            <div class="split-panel-top">
+              <div class="split-amount" id="splitOutAmount">Rp 0</div>
+              <div class="split-caption"><svg class="icon split-icon" width="14" height="14"><use href="#ic-up"/></svg><span>Total keluar bulan ini</span></div>
+            </div>
+            <div class="break-list" id="breakOut"></div>
+          </div>
+
+          <div class="split-panel" data-panel="1">
+            <div class="split-panel-top">
+              <div class="split-amount" id="splitSaveAmount">Rp 0</div>
+              <div class="split-caption"><svg class="icon split-icon" width="14" height="14"><use href="#ic-target"/></svg><span>Akumulasi tabungan &middot; semua waktu</span></div>
+            </div>
+            <div class="break-list-head" id="breakSaveHead">Disisihkan untuk</div>
+            <div class="break-list" id="breakSave"></div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="split-dots" aria-hidden="true">
+        <span class="dot active" data-dot="0"></span>
+        <span class="dot" data-dot="1"></span>
+      </div>
+      </div>
     </section>
 
     <!-- FORM -->
@@ -61,11 +128,11 @@
       <form id="txForm" novalidate>
         <div class="type-pills" role="radiogroup" aria-label="Jenis catatan">
           <input type="radio" name="type" id="t-masuk" value="masuk" checked>
-          <label for="t-masuk"><em>&#8595;</em>Masuk</label>
+          <label for="t-masuk"><svg class="icon" width="16" height="16"><use href="#ic-down"/></svg>Masuk</label>
           <input type="radio" name="type" id="t-nabung" value="nabung">
-          <label for="t-nabung"><em>&#9733;</em>Menabung</label>
+          <label for="t-nabung"><svg class="icon" width="16" height="16"><use href="#ic-target"/></svg>Menabung</label>
           <input type="radio" name="type" id="t-keluar" value="keluar">
-          <label for="t-keluar"><em>&#8593;</em>Keluar</label>
+          <label for="t-keluar"><svg class="icon" width="16" height="16"><use href="#ic-up"/></svg>Keluar</label>
         </div>
         <div class="field">
           <label for="amount">Jumlah</label>
@@ -76,43 +143,60 @@
         </div>
         <div class="field-row">
           <div class="field">
-            <label for="category">Kategori</label>
-            <select id="category"></select>
+            <label for="categoryBtn">Kategori</label>
+            <button type="button" class="picker-btn" id="categoryBtn" aria-haspopup="listbox" aria-expanded="false">
+              <span id="categoryBtnLabel">—</span>
+              <svg class="icon" width="14" height="14"><use href="#ic-chevron"/></svg>
+            </button>
+            <select id="category" class="sr-only" tabindex="-1" aria-hidden="true"></select>
           </div>
           <div class="field">
-            <label for="date">Tanggal</label>
-            <input type="date" id="date" required>
+            <label for="dateBtn">Tanggal</label>
+            <button type="button" class="picker-btn" id="dateBtn" aria-haspopup="dialog" aria-expanded="false">
+              <span id="dateBtnLabel">—</span>
+              <svg class="icon" width="14" height="14"><use href="#ic-calendar"/></svg>
+            </button>
+            <input type="date" id="date" class="sr-only" tabindex="-1" aria-hidden="true" required>
           </div>
         </div>
         <div class="field">
           <label for="note">Catatan (opsional)</label>
           <textarea id="note" placeholder="Contoh: gaji bulanan, nabung buat laptop..."></textarea>
         </div>
-        <button type="submit" class="btn btn-maroon submit-btn">&#65291; Simpan Catatan</button>
+        <button type="submit" class="btn btn-primary btn-block submit-btn"><svg class="icon" width="16" height="16"><use href="#ic-plus"/></svg>Simpan Catatan</button>
       </form>
-    </section>
 
-    <!-- STATS -->
-    <div class="stats">
-      <section class="card stat stat-maroon hoverable">
-        <span class="card-label">Pemasukan</span>
-        <span class="stat-icon" aria-hidden="true">&#8595;</span>
-        <div class="val" id="statIn">Rp 0</div>
-        <div class="trend">Total bulan ini</div>
-      </section>
-      <section class="card stat hoverable">
-        <span class="card-label">Pengeluaran</span>
-        <span class="stat-icon" aria-hidden="true">&#8593;</span>
-        <div class="val" id="statOut">Rp 0</div>
-        <div class="trend">Total bulan ini</div>
-      </section>
-      <section class="card stat stat-ink hoverable">
-        <span class="card-label">Total Tabungan</span>
-        <span class="stat-icon" aria-hidden="true">&#9733;</span>
-        <div class="val" id="statSave">Rp 0</div>
-        <div class="trend">Akumulasi semua waktu</div>
-      </section>
-    </div>
+      <!-- Custom category dropdown (replaces native <select> popover) -->
+      <div class="picker-backdrop" id="categoryBackdrop">
+        <div class="picker-sheet" role="listbox" aria-label="Pilih kategori">
+          <div class="picker-sheet-head">
+            <span class="card-label">Pilih Kategori</span>
+            <button type="button" class="modal-close" id="categoryClose" aria-label="Tutup"><svg class="icon" width="16" height="16"><use href="#ic-x"/></svg></button>
+          </div>
+          <div class="picker-list" id="categoryList"></div>
+        </div>
+      </div>
+
+      <!-- Custom date picker (replaces native <input type="date"> popover) -->
+      <div class="picker-backdrop" id="dateBackdrop">
+        <div class="picker-sheet picker-sheet-cal" role="dialog" aria-label="Pilih tanggal">
+          <div class="picker-sheet-head">
+            <span class="card-label">Pilih Tanggal</span>
+            <button type="button" class="modal-close" id="dateClose" aria-label="Tutup"><svg class="icon" width="16" height="16"><use href="#ic-x"/></svg></button>
+          </div>
+          <div class="cal-head">
+            <button type="button" class="cal-nav" id="calPrev" aria-label="Bulan sebelumnya"><svg class="icon" width="16" height="16"><use href="#ic-chevron-l"/></svg></button>
+            <span id="calMonthLabel">—</span>
+            <button type="button" class="cal-nav" id="calNext" aria-label="Bulan berikutnya"><svg class="icon" width="16" height="16"><use href="#ic-arrow-r"/></svg></button>
+          </div>
+          <div class="cal-dow">
+            <span>M</span><span>S</span><span>S</span><span>R</span><span>K</span><span>J</span><span>S</span>
+          </div>
+          <div class="cal-grid" id="calGrid"></div>
+          <button type="button" class="btn btn-block" id="calToday">Hari Ini</button>
+        </div>
+      </div>
+    </section>
 
     <!-- CHART -->
     <section class="card chart-card hoverable">
@@ -122,9 +206,9 @@
           <h2>6 Bulan Terakhir</h2>
         </div>
         <div class="legend">
-          <span><i style="background:var(--maroon)"></i>Masuk</span>
-          <span><i style="background:var(--ink)"></i>Tabungan</span>
-          <span><i style="background:var(--gray)"></i>Keluar</span>
+          <span><i class="sw sw-masuk"></i>Masuk</span>
+          <span><i class="sw sw-nabung"></i>Tabung</span>
+          <span><i class="sw sw-keluar"></i>Keluar</span>
         </div>
       </div>
       <div id="chartArea"></div>
@@ -137,6 +221,7 @@
           <span class="card-label">Riwayat</span>
           <h2>Catatan Terakhir</h2>
         </div>
+        <span class="list-count" id="listCount">0 tercatat</span>
       </div>
       <div class="filters" id="filters">
         <button class="chip active" data-f="all" type="button">Semua</button>
@@ -157,18 +242,18 @@
 <!-- MODAL PENGATURAN SHEETS -->
 <div class="modal-backdrop" id="modal">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <button class="modal-close" id="modalClose" type="button" aria-label="Tutup">&times;</button>
+    <button class="modal-close" id="modalClose" type="button" aria-label="Tutup"><svg class="icon" width="16" height="16"><use href="#ic-x"/></svg></button>
     <span class="card-label">Integrasi</span>
     <h2 id="modalTitle">Hubungkan Google Sheets</h2>
     <p>DuitKu mengirim data ke Google Sheet milikmu lewat <b>Google Apps Script</b> (gratis, tanpa server). Ikuti langkah di bawah, lalu tempel URL Web App-nya.</p>
 
     <ol class="steps">
-      <li>Buka <b>sheets.new</b> di browser untuk membuat Google Sheet baru.</li>
-      <li>Klik menu <b>Extensions &rarr; Apps Script</b>.</li>
-      <li>Hapus semua kode bawaan, lalu <b>tempel kode</b> di bawah ini.</li>
-      <li>Klik <b>Deploy &rarr; New deployment</b>, pilih tipe <b>Web app</b>.</li>
-      <li>Isi <i>Execute as</i>: <b>Me</b>, dan <i>Who has access</i>: <b>Anyone</b>.</li>
-      <li>Klik <b>Deploy</b>, izinkan akses, lalu <b>salin URL Web App</b> dan tempel di kolom bawah.</li>
+      <li><span class="step-n">1</span><span class="step-t">Buka <b>sheets.new</b> di browser untuk membuat Google Sheet baru.</span></li>
+      <li><span class="step-n">2</span><span class="step-t">Klik menu <b>Extensions &rarr; Apps Script</b>.</span></li>
+      <li><span class="step-n">3</span><span class="step-t">Hapus semua kode bawaan, lalu <b>tempel kode</b> di bawah ini.</span></li>
+      <li><span class="step-n">4</span><span class="step-t">Klik <b>Deploy &rarr; New deployment</b>, pilih tipe <b>Web app</b>.</span></li>
+      <li><span class="step-n">5</span><span class="step-t">Isi <i>Execute as</i>: <b>Me</b>, dan <i>Who has access</i>: <b>Anyone</b>.</span></li>
+      <li><span class="step-n">6</span><span class="step-t">Klik <b>Deploy</b>, izinkan akses, lalu <b>salin URL Web App</b> dan tempel di kolom bawah.</span></li>
     </ol>
 
     <div class="code-box">
@@ -250,10 +335,12 @@ function out(obj) {
     </div>
 
     <div class="modal-actions">
-      <button class="btn btn-maroon" id="saveSettings" type="button">Simpan Pengaturan</button>
-      <button class="btn" id="testConn" type="button">Tes Koneksi</button>
-      <button class="btn" id="syncAll" type="button">Kirim Semua Data</button>
-      <button class="btn btn-ink" id="exportCsv" type="button">Export CSV</button>
+      <button class="btn btn-primary btn-block" id="saveSettings" type="button">Simpan Pengaturan</button>
+      <div class="modal-actions-row">
+        <button class="btn" id="testConn" type="button">Tes Koneksi</button>
+        <button class="btn" id="syncAll" type="button">Kirim Semua Data</button>
+        <button class="btn" id="exportCsv" type="button">Export CSV</button>
+      </div>
     </div>
   </div>
 </div>

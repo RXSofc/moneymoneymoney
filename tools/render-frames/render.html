@@ -1,0 +1,59 @@
+<!doctype html>
+<html><body style="margin:0">
+<canvas id="gl"></canvas>
+<script type="importmap">{"imports":{"three":"./node_modules/three/build/three.module.js","three/addons/":"./node_modules/three/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+const gl = document.getElementById('gl');
+const R = 1100;                                  // ukuran render mentah (px)
+const renderer = new THREE.WebGLRenderer({ canvas: gl, antialias: true, alpha: true, preserveDrawingBuffer: true });
+renderer.setSize(R, R, false);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+const scene = new THREE.Scene();
+const cam = new THREE.PerspectiveCamera(28, 1, 0.01, 100);
+scene.add(new THREE.HemisphereLight(0xffffff, 0x8a8a8a, 2.2));
+const key = new THREE.DirectionalLight(0xffffff, 2.2); key.position.set(1.5, 2.5, 4); scene.add(key);
+const rim = new THREE.DirectionalLight(0xffffff, 2.3); rim.position.set(-3, 1.5, -2); scene.add(rim);
+
+let model;
+window.ready = new GLTFLoader().loadAsync('/model/character.glb').then(g => {
+  model = g.scene; scene.add(model);
+  // Model hasil scan/OBJ sering tanpa normal -> hitung supaya shading halus
+  model.traverse(o => {
+    if (o.isMesh) {
+      if (!o.geometry.attributes.normal) o.geometry.computeVertexNormals();
+      o.material.roughness = 0.75; o.material.metalness = 0;
+    }
+  });
+  const box = new THREE.Box3().setFromObject(model);
+  const c = box.getCenter(new THREE.Vector3());
+  model.position.sub(c);                         // pusatkan model di origin
+  return true;
+});
+
+/**
+ * cfg: { frames, yawMaxDeg, pitchDeg, dist, lookY, crop:{x,y,w,h} (0..1 dari render), out:{w,h}, quality }
+ * Mengembalikan array dataURL WebP (transparan, grayscale).
+ */
+window.renderFrames = async (cfg) => {
+  await window.ready;
+  const out = document.createElement('canvas'); out.width = cfg.out.w; out.height = cfg.out.h;
+  const ctx = out.getContext('2d');
+  const urls = [];
+  for (let i = 0; i < cfg.frames; i++) {
+    const t = cfg.frames === 1 ? 0 : i / (cfg.frames - 1);
+    const yaw = THREE.MathUtils.degToRad((t * 2 - 1) * cfg.yawMaxDeg);
+    model.rotation.set(THREE.MathUtils.degToRad(cfg.pitchDeg || 0), yaw, 0);
+    cam.position.set(0, cfg.lookY, cfg.dist); cam.lookAt(0, cfg.lookY, 0);
+    renderer.render(scene, cam);
+    ctx.clearRect(0, 0, out.width, out.height);
+    ctx.filter = 'grayscale(1) contrast(1.06)';
+    ctx.drawImage(gl, cfg.crop.x * R, cfg.crop.y * R, cfg.crop.w * R, cfg.crop.h * R, 0, 0, out.width, out.height);
+    urls.push(out.toDataURL('image/webp', cfg.quality));
+  }
+  return urls;
+};
+</script></body></html>
