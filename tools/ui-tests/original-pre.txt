@@ -1,0 +1,61 @@
+const SHEET_NAME = 'Catatan Keuangan';
+
+function doGet(e) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    return out({
+      ok: true,
+      pesan: 'Script aktif dan TERHUBUNG ke Spreadsheet: "' + ss.getName() + '".',
+      sheetUrl: ss.getUrl()
+    });
+  } catch (err) {
+    return out({
+      ok: false,
+      error: 'Script TIDAK terhubung ke Spreadsheet manapun. Ini biasanya karena script dibuat langsung dari script.google.com (standalone), bukan lewat Extensions > Apps Script dari DALAM Google Sheet. Detail error: ' + err.message
+    });
+  }
+}
+
+function doPost(e) {
+  if (!e || !e.postData) {
+    return out({ ok: false, error: 'Fungsi ini cuma jalan lewat request POST asli dari Web App, bukan dipencet Run di editor. Pakai tombol "Tes Koneksi" di app DuitKu untuk mengetes.' });
+  }
+  const body = JSON.parse(e.postData.contents);
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh = ss.getSheetByName(SHEET_NAME);
+  if (!sh) sh = ss.insertSheet(SHEET_NAME);
+  if (sh.getLastRow() === 0) {
+    sh.appendRow(['ID','Tanggal','Jenis','Kategori',
+                  'Jumlah (Rp)','Catatan','Dicatat Pada']);
+  }
+  if (body.action === 'ping') {
+    return out({ ok: true, pesan: 'Koneksi berhasil!' });
+  }
+  const rows = body.action === 'sync' ? body.items : [body.item];
+
+  // Kumpulin ID yang udah ada di sheet biar gak dobel pas sync dipencet berkali-kali
+  const existingIds = new Set();
+  const lastRow = sh.getLastRow();
+  if (lastRow > 1) {
+    sh.getRange(2, 1, lastRow - 1, 1).getValues().forEach(function(r) {
+      existingIds.add(String(r[0]));
+    });
+  }
+
+  let added = 0, skipped = 0;
+  rows.forEach(function(t) {
+    if (existingIds.has(String(t.id))) { skipped++; return; }
+    sh.appendRow([t.id, t.date, t.type, t.category,
+                  t.amount, t.note || '',
+                  new Date(t.createdAt || Date.now())]);
+    existingIds.add(String(t.id));
+    added++;
+  });
+  return out({ ok: true, total: rows.length, ditambahkan: added, dilewati: skipped });
+}
+
+function out(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}

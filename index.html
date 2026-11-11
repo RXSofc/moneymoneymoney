@@ -3,14 +3,26 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0A0A0A">
 <title>DuitKu — Catatan Uang & Tabungan</title>
 <meta name="description" content="Catat pemasukan, tabungan, dan pengeluaranmu. Sinkron ke Google Sheets.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;700;800&family=Martian+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
+<script>
+/* Animasi scroll menyembunyikan tile sampai masuk layar. Kalau motion.js gagal jalan,
+   jaring pengaman ini membuka semuanya lagi supaya konten tidak pernah hilang. */
+document.documentElement.classList.add('js');
+setTimeout(function(){
+  if(!document.documentElement.classList.contains('motion-ready')) document.documentElement.classList.remove('js');
+},2500);
+</script>
 </head>
 <body>
+
+<div class="grain" aria-hidden="true"></div>
+<div class="scroll-bar" aria-hidden="true"><i id="scrollBar"></i></div>
 
 <!-- SVG ICON SPRITE (no emoji, no external icon font — just plain geometric paths) -->
 <svg class="icon-defs" aria-hidden="true" focusable="false">
@@ -32,7 +44,7 @@
   <div class="ticker-track" id="tickerTrack"></div>
 </div>
 
-<header>
+<header id="siteHeader">
   <div class="header-inner">
     <a class="logo" href="#">
       <div class="logo-badge">D!</div>
@@ -52,29 +64,47 @@
 <main>
   <div class="bento">
 
-    <!-- HERO SALDO -->
-    <section class="card hero">
-      <svg class="hero-deco" viewBox="0 0 100 100" fill="none" aria-hidden="true">
+    <!-- 1. SALDO — struk kasir -->
+    <section class="tile paper t-hero" data-reveal data-fx="up" aria-label="Saldo">
+      <svg class="hero-deco" data-spin viewBox="0 0 100 100" fill="none" aria-hidden="true">
         <path d="M50 0 L58 42 L100 50 L58 58 L50 100 L42 58 L0 50 L42 42 Z" fill="currentColor"/>
       </svg>
-      <span class="card-label">Saldo Tersedia</span>
+      <div class="hero-top">
+        <span class="card-label">Saldo Tersedia</span>
+      </div>
       <div class="hero-amount" id="heroAmount">Rp 0</div>
-      <div class="hero-sub">
-        <div class="hero-sub-item">
-          <svg class="icon" width="13" height="13"><use href="#ic-down"/></svg>
-          <span class="hero-sub-val" id="heroMonthIn">Rp 0</span>
-          <span class="hero-sub-lbl">masuk bulan ini</span>
-        </div>
-        <div class="hero-sub-item">
-          <svg class="icon" width="13" height="13"><use href="#ic-up"/></svg>
-          <span class="hero-sub-val" id="heroMonthOut">Rp 0</span>
-          <span class="hero-sub-lbl">keluar bulan ini</span>
-        </div>
+      <p class="formula"><b>Masuk</b> &minus; <b>Keluar</b> &minus; <b>Tabung</b> = saldo</p>
+      <div class="tear" aria-hidden="true">
+        <span class="punch punch-l"></span>
+        <span class="tear-label">gunting di sini</span>
+        <span class="punch punch-r"></span>
+      </div>
+      <div class="hero-foot" aria-hidden="true">
+        <div class="barcode"></div>
+        <span class="serial">NO. 0001 &middot; KAS</span>
       </div>
     </section>
 
-    <!-- EXPENSE / SAVINGS SPLIT (swipeable) -->
-    <section class="card split-card" id="splitCard">
+    <!-- 2a. MASUK BULAN INI -->
+    <section class="tile t-in" data-reveal data-fx="left" aria-label="Masuk bulan ini">
+      <div class="mini-top">
+        <span class="card-label">Masuk bulan ini</span>
+        <span class="mini-ic" aria-hidden="true"><svg class="icon" width="22" height="22"><use href="#ic-down"/></svg></span>
+      </div>
+      <div class="mini-val" id="heroMonthIn">Rp 0</div>
+    </section>
+
+    <!-- 2b. KELUAR BULAN INI -->
+    <section class="tile hatch t-out" data-reveal data-fx="pop" aria-label="Keluar bulan ini">
+      <div class="mini-top">
+        <span class="card-label">Keluar bulan ini</span>
+        <span class="mini-ic" aria-hidden="true"><svg class="icon" width="22" height="22"><use href="#ic-up"/></svg></span>
+      </div>
+      <div class="mini-val" id="heroMonthOut">Rp 0</div>
+    </section>
+
+    <!-- 3. KELUAR & TABUNGAN (swipeable) + karakter 3D -->
+    <section class="tile t-split split-card" id="splitCard" data-reveal data-fx="right">
       <!-- Karakter 3D: frame hasil render di assets/char/ (lihat tools/render-frames/ untuk mengganti model) -->
       <div class="split-stage" aria-hidden="true">
         <canvas class="split-art" id="splitArt" width="560" height="490" data-frames="13" data-src="assets/char/f-{i}.webp"></canvas>
@@ -121,8 +151,9 @@
       </div>
     </section>
 
-    <!-- FORM -->
-    <section class="card form-card hoverable">
+    <!-- 4. FORM — slip setoran -->
+    <section class="tile t-form" data-reveal data-fx="up">
+      <div class="stamp" id="stamp" aria-hidden="true">TERCATAT</div>
       <span class="card-label">Catat Baru</span>
       <h2>Tambah Catatan Uang</h2>
       <form id="txForm" novalidate>
@@ -165,41 +196,10 @@
         </div>
         <button type="submit" class="btn btn-primary btn-block submit-btn"><svg class="icon" width="16" height="16"><use href="#ic-plus"/></svg>Simpan Catatan</button>
       </form>
-
-      <!-- Custom category dropdown (replaces native <select> popover) -->
-      <div class="picker-backdrop" id="categoryBackdrop">
-        <div class="picker-sheet" role="listbox" aria-label="Pilih kategori">
-          <div class="picker-sheet-head">
-            <span class="card-label">Pilih Kategori</span>
-            <button type="button" class="modal-close" id="categoryClose" aria-label="Tutup"><svg class="icon" width="16" height="16"><use href="#ic-x"/></svg></button>
-          </div>
-          <div class="picker-list" id="categoryList"></div>
-        </div>
-      </div>
-
-      <!-- Custom date picker (replaces native <input type="date"> popover) -->
-      <div class="picker-backdrop" id="dateBackdrop">
-        <div class="picker-sheet picker-sheet-cal" role="dialog" aria-label="Pilih tanggal">
-          <div class="picker-sheet-head">
-            <span class="card-label">Pilih Tanggal</span>
-            <button type="button" class="modal-close" id="dateClose" aria-label="Tutup"><svg class="icon" width="16" height="16"><use href="#ic-x"/></svg></button>
-          </div>
-          <div class="cal-head">
-            <button type="button" class="cal-nav" id="calPrev" aria-label="Bulan sebelumnya"><svg class="icon" width="16" height="16"><use href="#ic-chevron-l"/></svg></button>
-            <span id="calMonthLabel">—</span>
-            <button type="button" class="cal-nav" id="calNext" aria-label="Bulan berikutnya"><svg class="icon" width="16" height="16"><use href="#ic-arrow-r"/></svg></button>
-          </div>
-          <div class="cal-dow">
-            <span>M</span><span>S</span><span>S</span><span>R</span><span>K</span><span>J</span><span>S</span>
-          </div>
-          <div class="cal-grid" id="calGrid"></div>
-          <button type="button" class="btn btn-block" id="calToday">Hari Ini</button>
-        </div>
-      </div>
     </section>
 
-    <!-- CHART -->
-    <section class="card chart-card hoverable">
+    <!-- 5. CHART — buku kas bergaris -->
+    <section class="tile paper t-chart" data-reveal data-fx="left">
       <div class="chart-head">
         <div>
           <span class="card-label">Arus Uang</span>
@@ -214,8 +214,8 @@
       <div id="chartArea"></div>
     </section>
 
-    <!-- LIST -->
-    <section class="card list-card hoverable">
+    <!-- 6. RIWAYAT — kuitansi -->
+    <section class="tile t-list" data-reveal data-fx="right">
       <div class="list-head">
         <div>
           <span class="card-label">Riwayat</span>
@@ -229,15 +229,52 @@
         <button class="chip" data-f="nabung" type="button">Menabung</button>
         <button class="chip" data-f="keluar" type="button">Keluar</button>
       </div>
-      <div class="tx-list" id="txList"></div>
+      <div class="list-scroll">
+        <div class="tx-list" id="txList"></div>
+      </div>
     </section>
 
   </div>
 </main>
 
 <footer>
-  <b>DuitKu</b> &mdash; data tersimpan aman di browser kamu (localStorage) dan bisa disinkronkan ke Google Sheets milikmu sendiri.
+  <div class="ticker ticker-foot" aria-hidden="true">
+    <div class="ticker-track" id="tickerTrack2"></div>
+  </div>
+  <div class="mega" id="mega" aria-hidden="true">DUITKU</div>
+  <p class="foot-note"><b>DuitKu</b> &mdash; data tersimpan aman di browser kamu (localStorage) dan bisa disinkronkan ke Google Sheets milikmu sendiri.</p>
 </footer>
+
+<!-- Custom category dropdown (replaces native <select> popover) -->
+<div class="picker-backdrop" id="categoryBackdrop">
+  <div class="picker-sheet" role="listbox" aria-label="Pilih kategori">
+    <div class="picker-sheet-head">
+      <span class="card-label">Pilih Kategori</span>
+      <button type="button" class="modal-close" id="categoryClose" aria-label="Tutup"><svg class="icon" width="16" height="16"><use href="#ic-x"/></svg></button>
+    </div>
+    <div class="picker-list" id="categoryList"></div>
+  </div>
+</div>
+
+<!-- Custom date picker (replaces native <input type="date"> popover) -->
+<div class="picker-backdrop" id="dateBackdrop">
+  <div class="picker-sheet picker-sheet-cal" role="dialog" aria-label="Pilih tanggal">
+    <div class="picker-sheet-head">
+      <span class="card-label">Pilih Tanggal</span>
+      <button type="button" class="modal-close" id="dateClose" aria-label="Tutup"><svg class="icon" width="16" height="16"><use href="#ic-x"/></svg></button>
+    </div>
+    <div class="cal-head">
+      <button type="button" class="cal-nav" id="calPrev" aria-label="Bulan sebelumnya"><svg class="icon" width="16" height="16"><use href="#ic-chevron-l"/></svg></button>
+      <span id="calMonthLabel">—</span>
+      <button type="button" class="cal-nav" id="calNext" aria-label="Bulan berikutnya"><svg class="icon" width="16" height="16"><use href="#ic-arrow-r"/></svg></button>
+    </div>
+    <div class="cal-dow">
+      <span>M</span><span>S</span><span>S</span><span>R</span><span>K</span><span>J</span><span>S</span>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+    <button type="button" class="btn btn-block" id="calToday">Hari Ini</button>
+  </div>
+</div>
 
 <!-- MODAL PENGATURAN SHEETS -->
 <div class="modal-backdrop" id="modal">
@@ -258,7 +295,7 @@
 
     <div class="code-box">
       <button class="copy-btn" id="copyScript" type="button">Salin Kode</button>
-      <pre id="scriptCode">const SHEET_NAME = 'Catatan Keuangan';
+<pre id="scriptCode">const SHEET_NAME = 'Catatan Keuangan';
 
 function doGet(e) {
   try {
@@ -347,5 +384,6 @@ function out(obj) {
 
 <div class="toast-wrap" id="toasts"></div>
 <script src="js/script.js"></script>
+<script src="js/motion.js"></script>
 </body>
 </html>

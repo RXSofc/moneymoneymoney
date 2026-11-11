@@ -30,7 +30,7 @@ $$Features
 - Sync to Google Sheets using your own Google Apps Script (free, no extra server required)
 - Export to CSV if you don't feel like opening Google Sheets
 - Fully works offline — Google Sheets is optional, not required
-- Matte dark theme with maroon accents, mixing neobrutalism with a more modern touch (thick borders + offset shadows, without going overboard)
+- Pure monochrome (black & white) neobrutalism x bento grid — see "Desain UI" below
 
 ## File Structure
 
@@ -38,7 +38,9 @@ $$Features
 duitku/
 ├── index.html                    ← markup doang
 ├── css/style.css                 ← semua styling
-├── js/script.js                  ← semua logic
+├── js/script.js                  ← semua logic (data, form, sync, CSV)
+├── js/motion.js                  ← semua animasi scroll & interaksi visual
+├── tools/ui-tests/               ← tes fungsional + regresi UI (Playwright, opsional)
 └── assets/demo.gif
 ```
 
@@ -102,6 +104,48 @@ berisi putaran kepala dari kiri ke kanan. Karakter "menoleh" dengan memilih fram
 
 Pengaturan render (sudut putar, jarak kamera, area crop, jumlah frame, kualitas) ada di bagian `CONFIG` pada `tools/render-frames/render.mjs`.
 Hasil render otomatis dijadikan hitam-putih agar tema monokrom tetap konsisten. Tampilan panel (lebar, kemiringan, ukuran karakter)
-diatur lewat `--panel-w` dan `--slant` di `.split-card` pada `css/style.css`.
+diatur lewat `--panel-w` dan `--slant` di `.t-split` pada `css/style.css`.
 
 > Folder `tools/render-frames/node_modules` tidak perlu di-commit ke GitHub (tambahkan ke `.gitignore`).
+
+
+## Desain UI — "Buku Kas Warung"
+
+Redesign UI murni visual: **`js/script.js` identik byte-per-byte dengan versi sebelumnya**, semua ID elemen dipertahankan,
+dan kode Apps Script di modal tidak berubah satu karakter pun.
+
+**Konsep.** Neobrutalism x bento grid, hitam-putih murni. Hierarki dibangun dari kontras, tekstur (halftone, arsiran,
+garis buku kas, barcode), dan bentuk tile yang berbeda-beda, bukan dari warna:
+
+| Tile | Karakter |
+|---|---|
+| Saldo | struk kasir putih: sudut terpotong, lubang sobekan, barcode, bintang berputar |
+| Masuk / Keluar bulan ini | tile kecil terpisah; "keluar" berarsir diagonal |
+| Keluar & Tabungan | panel karakter 3D miring + halftone |
+| Catat Baru | slip setoran dengan tepi bergerigi + stempel "TERCATAT" saat tersimpan |
+| Arus Uang | buku kas bergaris; seri dibedakan isian: solid (masuk), kosong (tabung), arsir (keluar) |
+| Riwayat | kuitansi; baris berbalik warna saat di-hover |
+
+**Animasi** (semuanya di `js/motion.js`, hanya `transform`/`opacity`, dan menghormati `prefers-reduced-motion`):
+
+- tile "dicap" masuk saat di-scroll: meluncur, overshoot, lalu bayangan brutal snap ke posisi
+- dua pita ticker berlawanan arah; **kecepatan dan arahnya mengikuti scroll** (scroll naik = mundur)
+- progress bar scroll di paling atas, header mengecil menjadi pill melayang
+- bar chart tumbuh dan baris riwayat masuk satu per satu saat tile terlihat
+- bayangan tile bergeser menjauhi kursor (seperti sumber cahaya), tombol utama "magnetik"
+- teks raksasa "DUITKU" di footer bergeser mengikuti scroll
+- jaring pengaman: kalau `motion.js` gagal dimuat, konten tetap tampil (bukan tersembunyi selamanya)
+
+**Font:** Bricolage Grotesque (judul & teks) + Martian Mono (angka kecil) dari Google Fonts; ada fallback sistem kalau offline.
+
+### Menjalankan tes
+
+```bash
+cd tools/ui-tests
+npm install && npx playwright install chromium
+npm test              # 37 tes: fungsi, responsif (1440 -> 320px), animasi, reduced-motion
+npm run test:shots    # + screenshot desktop/tablet/mobile ke ./shots
+```
+
+Suite yang sama dijalankan terhadap versi lama dan versi baru; fungsi (tambah, hapus, filter, picker, sync, CSV,
+localStorage, karakter 3D) lolos di keduanya. Request ke Google Fonts dan Apps Script di-intercept, jadi tes jalan offline.
