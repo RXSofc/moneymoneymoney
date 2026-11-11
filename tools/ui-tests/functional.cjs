@@ -97,6 +97,8 @@ function sampleData() {
   const { ctx, sheetCalls } = await newContext();
   const page = await ctx.newPage();
   const errors = [];
+  const assetReqs = [];
+  page.on('request', r => { if (/\/assets\//.test(r.url())) assetReqs.push(r.url()); });
   page.on('pageerror', e => errors.push('pageerror: ' + e.message));
   page.on('console', m => { if (m.type() === 'error' && !/Failed to load resource|ERR_FAILED|ERR_BLOCKED/.test(m.text())) errors.push('console: ' + m.text()); });
   await page.goto(indexUrl);
@@ -174,11 +176,24 @@ function sampleData() {
     await page.click('.seg-btn[data-panel="0"]');
     ok(!(await page.locator('#splitTrack').evaluate(e => e.classList.contains('show-1'))), 'kembali');
   });
-  await check('karakter 3D: frame termuat & canvas tergambar', async () => {
-    await page.waitForFunction(() => document.getElementById('splitArt').hasAttribute('data-frame'), null, { timeout: 5000 });
-    ok(!(await page.locator('#splitCard').evaluate(e => e.classList.contains('no-art'))), 'tidak jatuh ke no-art');
-    const drawn = await page.locator('#splitArt').evaluate(c => { const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; for (let i = 3; i < d.length; i += 4) if (d[i] > 0) return true; return false; });
-    ok(drawn, 'canvas kosong');
+  await check('tile split: karakter 3D & judul lama sudah hilang, tidak ada request aset 3D', async () => {
+    eq(await page.locator('#splitArt').count(), 0, '#splitArt masih ada');
+    eq(await page.locator('.split-stage, .split-art').count(), 0, 'sisa panel karakter');
+    ok(!(await page.locator('body').innerText()).includes('Dua Hal yang Beda'), 'judul lama masih tampil');
+    ok(!assetReqs.some(u => /assets\/(char|source)/.test(u)), 'masih meminta aset 3D: ' + assetReqs.join(','));
+  });
+  await check('tile split: keycap aktif tertekan, ARIA ikut, rel menunjuk laci aktif', async () => {
+    const st = () => page.evaluate(() => [...document.querySelectorAll('.seg-btn')].map(b => b.getAttribute('aria-selected') + ':' + b.classList.contains('active')));
+    eq((await st()).join(), 'true:true,false:false');
+    await page.click('.seg-btn[data-panel="1"]');
+    eq((await st()).join(), 'false:false,true:true');
+    const w = await page.evaluate(() => [...document.querySelectorAll('.split-dots .dot')].map(d => d.classList.contains('active')));
+    eq(w.join(), 'false,true');
+    await page.click('.seg-btn[data-panel="0"]');
+  });
+  await check('tile split: tiap baris kategori punya label, nilai, dan isi bar sesuai porsi', async () => {
+    const row = await page.evaluate(() => { const r = document.querySelector('#breakOut .break-row'); return r ? { l: r.querySelector('.break-label').textContent, v: r.querySelector('.break-val').textContent, w: r.querySelector('.break-bar-fill').style.width } : null; });
+    ok(row && row.l === 'Makan & Minum' && row.v === 'Rp 300.000' && row.w === '100%', JSON.stringify(row));
   });
   await check('hapus catatan: klik 2x (konfirmasi) -> terhapus', async () => {
     const del = page.locator('.tx-del').first();

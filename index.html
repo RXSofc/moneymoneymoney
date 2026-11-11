@@ -103,21 +103,19 @@ setTimeout(function(){
       <div class="mini-val" id="heroMonthOut">Rp 0</div>
     </section>
 
-    <!-- 3. KELUAR & TABUNGAN (swipeable) + karakter 3D -->
+    <!-- 3. KELUAR & TABUNGAN — dua laci kas yang digeser -->
     <section class="tile t-split split-card" id="splitCard" data-reveal data-fx="right">
-      <!-- Karakter 3D: frame hasil render di assets/char/ (lihat tools/render-frames/ untuk mengganti model) -->
-      <div class="split-stage" aria-hidden="true">
-        <canvas class="split-art" id="splitArt" width="560" height="490" data-frames="13" data-src="assets/char/f-{i}.webp"></canvas>
-      </div>
-      <div class="split-body">
-      <div class="split-head">
-        <div>
-          <span class="card-label">Keluar &amp; Tabungan</span>
-          <h2>Dua Hal yang Beda</h2>
-        </div>
-        <div class="segctl" role="tablist" aria-label="Tampilkan">
-          <button class="seg-btn active" role="tab" aria-selected="true" data-panel="0" type="button">Pengeluaran</button>
-          <button class="seg-btn" role="tab" aria-selected="false" data-panel="1" type="button">Tabungan</button>
+      <div class="split-top">
+        <span class="card-label">Keluar &amp; Tabungan</span>
+        <div class="keys" role="tablist" aria-label="Tampilkan">
+          <button class="seg-btn key active" role="tab" aria-selected="true" data-panel="0" type="button">
+            <span class="key-ic" aria-hidden="true"><svg class="icon" width="16" height="16"><use href="#ic-up"/></svg></span>
+            <span class="key-t">Pengeluaran</span>
+          </button>
+          <button class="seg-btn key" role="tab" aria-selected="false" data-panel="1" type="button">
+            <span class="key-ic" aria-hidden="true"><svg class="icon" width="16" height="16"><use href="#ic-target"/></svg></span>
+            <span class="key-t">Tabungan</span>
+          </button>
         </div>
       </div>
 
@@ -126,16 +124,16 @@ setTimeout(function(){
 
           <div class="split-panel" data-panel="0">
             <div class="split-panel-top">
+              <div class="split-caption"><i aria-hidden="true"></i><span>Total keluar bulan ini</span></div>
               <div class="split-amount" id="splitOutAmount">Rp 0</div>
-              <div class="split-caption"><svg class="icon split-icon" width="14" height="14"><use href="#ic-up"/></svg><span>Total keluar bulan ini</span></div>
             </div>
             <div class="break-list" id="breakOut"></div>
           </div>
 
           <div class="split-panel" data-panel="1">
             <div class="split-panel-top">
+              <div class="split-caption"><i aria-hidden="true"></i><span>Akumulasi tabungan &middot; semua waktu</span></div>
               <div class="split-amount" id="splitSaveAmount">Rp 0</div>
-              <div class="split-caption"><svg class="icon split-icon" width="14" height="14"><use href="#ic-target"/></svg><span>Akumulasi tabungan &middot; semua waktu</span></div>
             </div>
             <div class="break-list-head" id="breakSaveHead">Disisihkan untuk</div>
             <div class="break-list" id="breakSave"></div>
@@ -147,7 +145,6 @@ setTimeout(function(){
       <div class="split-dots" aria-hidden="true">
         <span class="dot active" data-dot="0"></span>
         <span class="dot" data-dot="1"></span>
-      </div>
       </div>
     </section>
 

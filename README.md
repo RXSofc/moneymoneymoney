@@ -38,7 +38,7 @@ $$Features
 duitku/
 ├── index.html                    ← markup doang
 ├── css/style.css                 ← semua styling
-├── js/script.js                  ← semua logic (data, form, sync, CSV)
+├── js/script.js                  ← semua logic (data, form, sync, CSV, swipe laci)
 ├── js/motion.js                  ← semua animasi scroll & interaksi visual
 ├── tools/ui-tests/               ← tes fungsional + regresi UI (Playwright, opsional)
 └── assets/demo.gif
@@ -79,39 +79,9 @@ If you find it useful or end up building something cool with it, I'd be happy to
 
 
 
-## Karakter 3D di card "Keluar & Tabungan"
-
-Card ini punya panel miring di kiri berisi karakter 3D (`assets/source/character.glb`). Di browser **tidak ada WebGL/library 3D**:
-model dirender sekali menjadi 13 frame WebP transparan (`assets/char/f-0.webp` ... `f-12.webp`, total sekitar 280 KB) yang
-berisi putaran kepala dari kiri ke kanan. Karakter "menoleh" dengan memilih frame yang sesuai:
-
-- mengikuti **jari** saat card di-swipe, dan menoleh cepat saat ganti tab Pengeluaran/Tabungan
-- mengikuti **kursor** di desktop, dan goyang pelan saat diam
-- berhenti bergerak kalau card tidak terlihat, tab browser disembunyikan, atau user memakai *reduce motion*
-- kalau frame tidak ada, card otomatis kembali ke layout penuh tanpa panel
-
-### Mengganti karakter
-
-1. Timpa `assets/source/character.glb` dengan model baru (format GLB).
-2. Jalankan tool render (sekali saja, butuh Node.js):
-   ```bash
-   cd tools/render-frames
-   npm install
-   npx playwright install chromium
-   npm run render
-   ```
-3. Frame baru otomatis ditulis ke `assets/char/`. Kalau jumlah frame diubah, samakan `data-frames` pada `<canvas id="splitArt">` di `index.html`.
-
-Pengaturan render (sudut putar, jarak kamera, area crop, jumlah frame, kualitas) ada di bagian `CONFIG` pada `tools/render-frames/render.mjs`.
-Hasil render otomatis dijadikan hitam-putih agar tema monokrom tetap konsisten. Tampilan panel (lebar, kemiringan, ukuran karakter)
-diatur lewat `--panel-w` dan `--slant` di `.t-split` pada `css/style.css`.
-
-> Folder `tools/render-frames/node_modules` tidak perlu di-commit ke GitHub (tambahkan ke `.gitignore`).
-
-
 ## Desain UI — "Buku Kas Warung"
 
-Redesign UI murni visual: **`js/script.js` identik byte-per-byte dengan versi sebelumnya**, semua ID elemen dipertahankan,
+Redesign UI murni visual: **`js/script.js` tidak diubah selain pembuangan blok karakter 3D**, semua ID elemen dipertahankan,
 dan kode Apps Script di modal tidak berubah satu karakter pun.
 
 **Konsep.** Neobrutalism x bento grid, hitam-putih murni. Hierarki dibangun dari kontras, tekstur (halftone, arsiran,
@@ -121,7 +91,7 @@ garis buku kas, barcode), dan bentuk tile yang berbeda-beda, bukan dari warna:
 |---|---|
 | Saldo | struk kasir putih: sudut terpotong, lubang sobekan, barcode, bintang berputar |
 | Masuk / Keluar bulan ini | tile kecil terpisah; "keluar" berarsir diagonal |
-| Keluar & Tabungan | panel karakter 3D miring + halftone |
+| Keluar & Tabungan | dua "laci kas" yang digeser: Pengeluaran gelap berarsir, Tabungan putih berbintik. Tab berupa keycap yang tertekan, nominal jadi pita label-maker bergerigi, tiap kategori satu baris yang terisi sesuai porsinya |
 | Catat Baru | slip setoran dengan tepi bergerigi + stempel "TERCATAT" saat tersimpan |
 | Arus Uang | buku kas bergaris; seri dibedakan isian: solid (masuk), kosong (tabung), arsir (keluar) |
 | Riwayat | kuitansi; baris berbalik warna saat di-hover |
@@ -143,9 +113,12 @@ garis buku kas, barcode), dan bentuk tile yang berbeda-beda, bukan dari warna:
 ```bash
 cd tools/ui-tests
 npm install && npx playwright install chromium
-npm test              # 37 tes: fungsi, responsif (1440 -> 320px), animasi, reduced-motion
+npm test              # 39 tes: fungsi, responsif (1440 -> 320px), animasi, reduced-motion
 npm run test:shots    # + screenshot desktop/tablet/mobile ke ./shots
 ```
 
 Suite yang sama dijalankan terhadap versi lama dan versi baru; fungsi (tambah, hapus, filter, picker, sync, CSV,
-localStorage, karakter 3D) lolos di keduanya. Request ke Google Fonts dan Apps Script di-intercept, jadi tes jalan offline.
+localStorage) lolos di keduanya. (Tes karakter 3D hanya ada di versi lama; fitur itu sudah dibuang.) Request ke Google Fonts dan Apps Script di-intercept, jadi tes jalan offline.
+
+> **Catatan:** karakter 3D di tile "Keluar & Tabungan" sudah dihapus sepenuhnya (kode sprite di `script.js`,
+> `assets/char/`, `assets/source/` dan `tools/render-frames/`). Seluruh bagian lain `script.js` tidak berubah.

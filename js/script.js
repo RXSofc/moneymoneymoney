@@ -322,83 +322,6 @@ function renderSplit(mOut,totalSave){
   renderBreakdown('breakSave',categoryBreakdown('nabung',false));
 }
 
-/* ============ KARAKTER 3D (sprite turntable) ============
-   Frame hasil render model 3D (assets/char/f-0..N-1.webp) menyimpan satu putaran
-   kepala dari kiri ke kanan. Karakter "menoleh" dengan memilih frame terdekat:
-   - mengikuti jari saat card di-swipe, dan menoleh saat ganti tab
-   - mengikuti kursor (mouse), dan goyang pelan saat diam
-   Tanpa WebGL/library di runtime, jadi ringan. Kalau frame tidak ada, card jatuh
-   ke layout penuh tanpa karakter. */
-var splitArt={kick:function(){},drag:function(){},release:function(){}};
-(function initSplitArt(){
-  var cv=$('splitArt'), card=$('splitCard');
-  var N=parseInt(cv.getAttribute('data-frames'),10)||9, tpl=cv.getAttribute('data-src');
-  var ctx=cv.getContext('2d'), frames=[], loaded=0, failed=false;
-  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var REST=0.22;                       // -1 (kiri) .. +1 (kanan); sedikit menoleh ke arah konten
-  var yaw=REST, vel=0, target=REST, lastPointer=0, dragOff=null, lastDrawn=-9, visible=true, running=false;
-
-  function fail(){if(failed)return;failed=true;card.classList.add('no-art')}
-  for(var i=0;i<N;i++){(function(i){
-    var im=new Image();im.decoding='async';
-    im.onload=function(){loaded++;if(loaded===N)start()};
-    im.onerror=fail;
-    im.src=tpl.replace('{i}',i);
-    frames[i]=im;
-  })(i)}
-
-  function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
-  function draw(force){
-    // snap ke frame terdekat (tanpa blend -> tidak ada bayangan ganda)
-    var idx=Math.round((clamp(yaw,-1,1)+1)/2*(N-1));
-    if(!force&&idx===lastDrawn)return;
-    lastDrawn=idx;cv.setAttribute('data-frame',idx);
-    ctx.clearRect(0,0,cv.width,cv.height);
-    ctx.drawImage(frames[idx],0,0,cv.width,cv.height);
-  }
-  var t0=performance.now(), prev=t0;
-  function tick(now){
-    if(!running)return;
-    var dt=Math.min(40,now-prev)/16.7;prev=now;
-    var t=(now-t0)/1000;
-    if(dragOff!==null){target=clamp(REST+dragOff,-1,1)}
-    else if(now-lastPointer<2200){/* target diisi pointermove */}
-    else{target=REST+0.24*Math.sin(t*1.1)}
-    vel+=(target-yaw)*0.085*dt;      // pegas menuju target
-    vel*=Math.pow(0.80,dt);          // redaman
-    yaw+=vel*dt;
-    draw(false);
-    requestAnimationFrame(tick);
-  }
-  function start(){
-    draw(true);
-    if(reduce)return;                // tanpa animasi kalau user minta reduce motion
-    run();
-  }
-  function run(){if(running||failed||reduce||!visible||document.hidden)return;running=true;prev=performance.now();requestAnimationFrame(tick)}
-  function stop(){running=false}
-
-  if('IntersectionObserver' in window){
-    new IntersectionObserver(function(es){visible=es[0].isIntersecting;visible?run():stop()},{threshold:0.05}).observe(card);
-  }
-  document.addEventListener('visibilitychange',function(){document.hidden?stop():run()});
-
-  window.addEventListener('pointermove',function(e){
-    if(e.pointerType!=='mouse'||reduce)return;
-    var r=cv.getBoundingClientRect();
-    var cx=r.left+r.width*0.5;
-    target=clamp((e.clientX-cx)/(window.innerWidth*0.38),-1,1);
-    lastPointer=performance.now();
-  },{passive:true});
-
-  splitArt.kick=function(panel){      // ganti tab -> menoleh cepat ke arah konten baru lalu kembali
-    if(reduce||failed)return;
-    vel+=(panel===1?-1:1)*0.16;
-  };
-  splitArt.drag=function(dx){dragOff=clamp(dx/130,-1,1)*0.8};
-  splitArt.release=function(){dragOff=null};
-})();
-
 (function initSplitSwipe(){
   var track=$('splitTrack'), viewport=$('splitViewport');
   var segBtns=document.querySelectorAll('.seg-btn');
@@ -409,7 +332,6 @@ var splitArt={kick:function(){},drag:function(){},release:function(){}};
     panel=i;
     track.classList.toggle('show-1',panel===1);
     $('splitCard').classList.toggle('is-save',panel===1);
-    splitArt.kick(panel);
     segBtns.forEach(function(b){
       var active=Number(b.getAttribute('data-panel'))===panel;
       b.classList.toggle('active',active);
@@ -429,11 +351,9 @@ var splitArt={kick:function(){},drag:function(){},release:function(){}};
   viewport.addEventListener('touchmove',function(e){
     if(!dragging)return;
     dx=e.touches[0].clientX-startX;
-    splitArt.drag(dx);
   },{passive:true});
   viewport.addEventListener('touchend',function(){
     if(!dragging)return;dragging=false;
-    splitArt.release();
     if(Math.abs(dx)>42){
       if(dx<0&&panel===0)go(1);
       else if(dx>0&&panel===1)go(0);

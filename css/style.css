@@ -273,80 +273,111 @@ main{max-width:1240px;margin:0 auto;padding:30px 20px 70px;overflow-x:clip}   /*
   margin-top:20px;font-variant-numeric:tabular-nums;word-break:break-word;
 }
 
-/* ============ 3. SPLIT — Pengeluaran ⟷ Tabungan + karakter 3D ============ */
+/* ============ 3. SPLIT — Pengeluaran / Tabungan ============
+   Dua "laci kas" yang digeser. Pengeluaran = laci gelap berarsir, Tabungan =
+   laci putih berbintik halftone. Dua tombol di atas berupa keycap fisik:
+   yang aktif tertekan (bayangan hilang), yang lain menonjol.
+   Amount tampil sebagai pita label-maker yang panjangnya mengikuti angka.
+   Tiap kategori adalah satu baris yang isinya "terisi" sesuai porsinya;
+   teks memakai mix-blend-mode: difference sehingga selalu terbaca,
+   di atas bagian hitam maupun putih. */
 .t-split{
   grid-column:8/13;grid-row:1/3;
-  --panel-w:clamp(128px,38%,200px);   /* lebar panel karakter di kiri */
-  --slant:26px;                       /* kemiringan tepi panel */
-  overflow:hidden;
-  padding-left:calc(var(--panel-w) + 14px);
-  min-height:290px;
+  padding:0;overflow:hidden;min-height:290px;
   display:flex;flex-direction:column;
   border-radius:var(--r-lg) var(--r-lg) var(--r-lg) 70px;
 }
-/* panel karakter: blok terang bertepi miring + halftone */
-.split-stage{
-  position:absolute;left:0;top:0;bottom:0;width:var(--panel-w);
-  background-color:var(--ink);
-  background-image:radial-gradient(rgba(10,10,10,.17) 1.3px,transparent 1.6px);
-  background-size:11px 11px;
-  clip-path:polygon(0 0,100% 0,calc(100% - var(--slant)) 100%,0 100%);
-  pointer-events:none;
-}
-.split-art{
-  position:absolute;left:-38%;top:50%;
-  width:168%;height:auto;aspect-ratio:560/490;
-  transform:translateY(-52%);
-  pointer-events:none;user-select:none;
-  transition:transform .6s var(--ease-spring);
-}
-.t-split.is-save .split-art{transform:translateY(-54%) scale(1.06)}
-.t-split.no-art{padding-left:26px}
-.t-split.no-art .split-stage{display:none}
+/* di laci Tabungan, bayangan tile berubah jadi garis tipis terpisah (gaya "kertas") */
+.t-split.is-save{box-shadow:var(--sx) var(--sy) 0 0 var(--bg),calc(var(--sx) + 3px) calc(var(--sy) + 3px) 0 0 var(--ink)}
 
-.split-body{position:relative;z-index:1;display:flex;flex-direction:column;flex:1;min-width:0}
-.split-head{display:flex;flex-direction:column;align-items:stretch;gap:14px;margin-bottom:20px}
-.split-head h2{font-size:1.3rem;margin-top:10px}
-.segctl{
-  display:flex;border:var(--bw) solid var(--ink);border-radius:999px;
-  padding:3px;gap:2px;background:var(--bg);align-self:stretch;
+.split-top{padding:24px 26px 20px;background:var(--s1);position:relative;z-index:2}
+.keys{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.key{
+  display:flex;align-items:center;gap:10px;min-width:0;
+  border:var(--bw) solid var(--ink);border-radius:14px;
+  background:var(--s2);color:var(--ink);
+  padding:10px 12px;text-align:left;
+  font-weight:800;font-size:.9rem;letter-spacing:-.015em;
+  box-shadow:4px 4px 0 var(--ink);
+  transition:transform .22s var(--ease-spring),box-shadow .22s var(--ease-spring),background .2s,color .2s;
 }
-.seg-btn{
-  flex:1;border:0;background:transparent;color:var(--dim);
-  font-weight:700;font-size:.76rem;letter-spacing:.01em;
-  padding:8px 8px;border-radius:999px;white-space:nowrap;
-  transition:background .3s var(--ease-out),color .3s var(--ease-out),transform .2s var(--ease-spring);
-}
-.seg-btn:hover:not(.active){color:var(--ink)}
-.seg-btn:active{transform:scale(.95)}
-.seg-btn.active{background:var(--ink);color:var(--on-ink)}
+.key-ic{width:30px;height:30px;flex:none;display:grid;place-items:center;border:2.5px solid currentColor;border-radius:9px}
+.key-t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.key:hover:not(.active){transform:translate(-1px,-1px);box-shadow:5px 5px 0 var(--ink)}
+.key.active{background:var(--ink);color:var(--on-ink);transform:translate(4px,4px);box-shadow:0 0 0 var(--ink)}
+.key:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--ink)}
 
-.split-viewport{overflow:hidden;touch-action:pan-y;flex:1}
-.split-track{display:flex;width:200%;transition:transform .5s var(--ease-spring)}
+.split-viewport{flex:1;display:flex;overflow:hidden;touch-action:pan-y;border-top:var(--bw) solid var(--ink);border-bottom:var(--bw) solid var(--ink)}
+.split-track{flex:none;display:flex;width:200%;transition:transform .55s var(--ease-spring)}
 .split-track.show-1{transform:translateX(-50%)}
-.split-panel{width:50%;flex:none;min-width:0;padding-right:2px}
-.split-panel-top{margin-bottom:20px}
-.split-amount{
-  font-weight:800;font-size:clamp(1.7rem,5vw,2.5rem);letter-spacing:-.045em;
-  font-variant-numeric:tabular-nums;line-height:1;word-break:break-word;
+.split-panel{
+  --pp:26px;
+  width:50%;flex:none;min-width:0;padding:24px var(--pp) 28px;
+  background-color:var(--p-bg);color:var(--p-fg);
 }
-.split-caption{display:flex;align-items:center;gap:8px;font-size:.74rem;color:var(--dim);margin-top:10px;line-height:1.3}
-.split-icon{width:24px;height:24px;flex:none;padding:4px;border:2px solid var(--ink);border-radius:7px;color:var(--ink)}
-.break-list-head{font-family:var(--f-mono);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-bottom:12px;font-weight:700}
-.break-list{display:flex;flex-direction:column;gap:15px}
-.break-row{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:10px;row-gap:6px;align-items:baseline}
-.break-label{grid-column:1;grid-row:1;font-size:.76rem;font-weight:700;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.break-val{grid-column:2;grid-row:1;font-family:var(--f-mono);font-weight:700;font-size:.64rem;white-space:nowrap}
-.break-bar-track{grid-column:1/-1;grid-row:2;height:10px;border-radius:999px;background:var(--bg);border:2px solid var(--line);overflow:hidden}
+.split-panel[data-panel="0"]{
+  --p-bg:var(--s1);--p-fg:var(--ink);--p-dim:var(--dim);
+  background-image:repeating-linear-gradient(135deg,transparent 0 9px,rgba(243,241,234,.075) 9px 11px);
+}
+.split-panel[data-panel="1"]{
+  --p-bg:var(--ink);--p-fg:var(--on-ink);--p-dim:#55534D;
+  background-image:radial-gradient(rgba(10,10,10,.14) 1.2px,transparent 1.7px);background-size:11px 11px;
+}
+
+.split-panel-top{display:flex;flex-direction:column;align-items:flex-start;gap:12px;margin-bottom:22px}
+.split-caption{display:flex;align-items:center;gap:9px;font-family:var(--f-mono);font-size:.6rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--p-dim)}
+.split-caption i{width:9px;height:9px;flex:none;background:var(--p-fg);transform:rotate(45deg)}
+/* pita label-maker: mentok ke tepi kiri, ujung kanannya bergerigi bekas digunting */
+.split-amount{
+  width:max-content;max-width:calc(100% + var(--pp));
+  margin-left:calc(var(--pp) * -1);
+  padding:13px 36px 13px var(--pp);
+  background:var(--p-fg);color:var(--p-bg);
+  font-weight:800;font-size:clamp(1.8rem,4.6vw,2.6rem);letter-spacing:-.05em;line-height:1;
+  font-variant-numeric:tabular-nums;word-break:break-word;
+  /* garis tipis di dalam pita (atas & bawah saja, supaya gerigi kanan tetap bersih) */
+  background-image:linear-gradient(var(--p-bg),var(--p-bg)),linear-gradient(var(--p-bg),var(--p-bg));
+  background-size:calc(100% - 24px) 1.5px;background-repeat:no-repeat;
+  background-position:0 4px,0 calc(100% - 5.5px);
+  clip-path:polygon(0 0,calc(100% - 11px) 0,100% 10%,calc(100% - 11px) 20%,100% 30%,calc(100% - 11px) 40%,100% 50%,calc(100% - 11px) 60%,100% 70%,calc(100% - 11px) 80%,100% 90%,calc(100% - 11px) 100%,0 100%);
+}
+.break-list-head{font-family:var(--f-mono);font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:var(--p-dim);margin:-6px 0 12px;font-weight:700}
+
+/* satu kategori = satu baris; porsi pengeluaran jadi isi baris itu sendiri */
+.break-list{display:flex;flex-direction:column;gap:10px;counter-reset:rank}
+.break-row{
+  position:relative;isolation:isolate;overflow:hidden;
+  display:flex;align-items:center;gap:12px;min-height:46px;
+  padding:0 14px 0 48px;
+  background:var(--p-bg);border:var(--bw) solid var(--p-fg);border-radius:12px;
+  counter-increment:rank;
+}
+.break-row::before{
+  content:counter(rank,decimal-leading-zero);
+  position:absolute;left:0;top:0;bottom:0;width:34px;z-index:2;
+  display:grid;place-items:center;
+  background:var(--p-fg);color:var(--p-bg);
+  font-family:var(--f-mono);font-size:.58rem;font-weight:700;letter-spacing:.04em;
+}
+.break-bar-track{position:absolute;left:34px;right:0;top:0;bottom:0;z-index:0;display:block}
 .break-bar-fill{
-  display:block;height:100%;width:0%;border-radius:999px;transform-origin:left;
-  background:repeating-linear-gradient(135deg,var(--ink) 0 5px,#d8d5cc 5px 8px);
+  display:block;height:100%;width:0%;transform-origin:left;
+  background:var(--p-fg);
   transition:width .9s var(--ease-out),transform .9s var(--ease-out);
 }
-.break-empty{font-size:.82rem;color:var(--faint);padding:6px 0}
-.split-dots{display:flex;gap:7px;justify-content:flex-start;margin-top:auto;padding-top:18px}
-.split-dots .dot{width:9px;height:9px;border-radius:3px;background:var(--faint);transition:background .25s,transform .35s var(--ease-spring),width .35s var(--ease-spring)}
-.split-dots .dot.active{background:var(--ink);width:26px}
+.break-label,.break-val{position:relative;z-index:1;color:#fff;mix-blend-mode:difference;white-space:nowrap}
+.break-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:.8rem;font-weight:700}
+.break-val{flex:none;font-family:var(--f-mono);font-weight:700;font-size:.66rem}
+.break-empty{
+  border:var(--bw) dashed var(--p-fg);border-radius:12px;
+  padding:34px 16px;text-align:center;background:var(--p-bg);
+  font-family:var(--f-mono);font-size:.64rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--p-dim);
+}
+
+/* rel dua segmen: posisi laci yang sedang terbuka */
+.split-dots{display:flex;gap:8px;padding:16px 26px 20px;background:var(--s1)}
+.split-dots .dot{flex:1;height:10px;border:2.5px solid var(--ink);border-radius:3px;background:transparent;transition:background .25s,flex-grow .45s var(--ease-spring)}
+.split-dots .dot.active{background:var(--ink);flex-grow:2.2}
 
 /* ============ 4. FORM — slip setoran ============ */
 .t-form{grid-column:1/8;grid-row:3}
@@ -772,8 +803,11 @@ footer{margin-top:20px;border-top:var(--bw) solid var(--ink);background:var(--s1
   .tile:hover{--sx:6px;--sy:6px}
   .t-hero{padding:22px 22px 18px;min-height:300px;border-radius:8px 56px 8px 8px}
   .tear{margin-left:-22px;margin-right:-22px}
-  .t-split{padding-left:calc(var(--panel-w) + 12px)}
-  .t-split.no-art{padding-left:20px}
+  .split-top{padding:20px 20px 16px}
+  .split-panel{--pp:20px;padding-top:20px;padding-bottom:24px}
+  .split-dots{padding:14px 20px 18px}
+  .key{flex-direction:column;align-items:flex-start;gap:7px;padding:10px 12px;font-size:.84rem}
+  .key-ic{width:26px;height:26px;border-radius:8px}
   .t-in,.t-out{min-height:136px;padding:16px}
   .t-in .card-label,.t-out .card-label{font-size:.52rem;padding:4px 8px}
   .mini-ic{width:36px;height:36px}
