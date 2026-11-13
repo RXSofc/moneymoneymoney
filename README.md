@@ -10,7 +10,7 @@ DuitKu takes the opposite approach: your data stays on your own device using "lo
 
 It's basically one HTML file (plus separate CSS/JS if you prefer keeping things organized like this repo). No build step, no "npm install", no framework. Open it in a browser and you're good to go.
 
-![DuitKu Demo](assets/demo.gif)
+![DuitKu Demo](assets/demo1.gif)
 
 ## Why It's Built This Way
 
