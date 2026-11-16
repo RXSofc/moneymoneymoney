@@ -10,7 +10,7 @@ DuitKu takes the opposite approach: your data stays on your own device using "lo
 
 It's basically one HTML file (plus separate CSS/JS if you prefer keeping things organized like this repo). No build step, no "npm install", no framework. Open it in a browser and you're good to go.
 
-![DuitKu Demo](assets/demo1.gif)
+![DuitKu Demo](assets/demo.gif)
 
 ## Why It's Built This Way
 
@@ -40,6 +40,7 @@ duitku/
 ├── css/style.css                 ← semua styling
 ├── js/script.js                  ← semua logic (data, form, sync, CSV, swipe laci)
 ├── js/motion.js                  ← semua animasi scroll & interaksi visual
+├── js/splash.js                  ← intro "Struk Disobek" (uang jatuh, canvas 2D)
 ├── tools/ui-tests/               ← tes fungsional + regresi UI (Playwright, opsional)
 └── assets/demo.gif
 ```
@@ -108,12 +109,35 @@ garis buku kas, barcode), dan bentuk tile yang berbeda-beda, bukan dari warna:
 
 **Font:** Bricolage Grotesque (judul & teks) + Martian Mono (angka kecil) dari Google Fonts; ada fallback sistem kalau offline.
 
+### Splash intro — "Struk Disobek"
+
+Intro ~3 detik di `js/splash.js` (markup `#splash` di `index.html`, gaya di bagian SPLASH pada `css/style.css`):
+
+1. Lembar struk putih; uang kertas & koin hitam jatuh sambil berputar lalu **menumpuk** di dasar layar (canvas 2D,
+   sprite digambar sekali, tumpukan disimpan di layer terpisah sehingga ringan).
+2. Wordmark **DUITKU** terisi dari bawah mengikuti progres. Teksnya putih + `mix-blend-mode: difference`, jadi otomatis
+   hitam di atas kertas dan putih di atas uang.
+3. Stempel **KAS DIBUKA** dicap.
+4. Seluruh lembar **disobek ke atas** dengan tepi bergerigi; tile app baru mulai "dicap" masuk saat lembar terangkat.
+
+Perilaku:
+
+- Tampil **sekali per sesi tab** (`sessionStorage` `duitku_intro_v1`). Tambahkan **`?intro`** di URL untuk memutarnya lagi.
+- Bisa dilewati: tombol **Lewati**, klik/tap di mana saja, Enter, Spasi, atau Esc.
+- Tidak tampil sama sekali bila `prefers-reduced-motion` aktif.
+- Selama intro, header/main/footer di-set `inert` (fokus keyboard tidak nyasar ke balik layar) dan scroll dikunci.
+- Jaring pengaman berlapis: tanpa canvas intro dilewati; kalau `splash.js` gagal, class penutup dicabut otomatis (9 dtk).
+- Jumlah uang dibatasi proyeksi tinggi tumpukan (maks. kira-kira sepertiga layar) supaya wordmark selalu terbaca, di
+  desktop maupun HP. Atur lewat `PILE_TARGET`, `T_SPAWN`, `T_EXIT` di bagian atas `splash.js`.
+
+Tidak menyentuh data aplikasi; satu-satunya yang ditulis adalah flag sessionStorage di atas.
+
 ### Menjalankan tes
 
 ```bash
 cd tools/ui-tests
 npm install && npx playwright install chromium
-npm test              # 39 tes: fungsi, responsif (1440 -> 320px), animasi, reduced-motion
+npm test              # 46 tes: fungsi, responsif (1440 -> 320px), animasi, reduced-motion
 npm run test:shots    # + screenshot desktop/tablet/mobile ke ./shots
 ```
 

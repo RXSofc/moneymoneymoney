@@ -683,6 +683,87 @@ main{max-width:1240px;margin:0 auto;padding:30px 20px 70px;overflow-x:clip}   /*
 .switch input:checked+i{border-color:var(--ink)}
 .switch input:checked+i::after{transform:translateX(23px);background:var(--ink)}
 
+/* ============ SPLASH — "Struk Disobek" ============
+   Lembar struk putih: uang hitam jatuh & menumpuk (canvas, js/splash.js),
+   wordmark terisi dari bawah (teks putih + mix-blend-mode: difference, jadi
+   otomatis hitam di atas kertas dan putih di atas uang), distempel, lalu
+   lembarnya disobek ke atas dengan tepi bergerigi. */
+.splash{display:none}
+html.splash-on{overflow:hidden;scrollbar-gutter:stable}
+.splash-on .splash{display:block}
+.splash{
+  position:fixed;inset:0;z-index:1000;isolation:isolate;
+  background-color:var(--ink);color:var(--on-ink);
+  background-image:radial-gradient(rgba(10,10,10,.11) 1.3px,transparent 1.3px);background-size:24px 24px;
+  will-change:transform;
+}
+.splash::before{
+  content:"";position:absolute;inset:0;z-index:3;pointer-events:none;opacity:.09;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1.2 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+.splash canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.splash-bar{position:absolute;top:0;left:0;right:0;height:8px;z-index:4;background:rgba(10,10,10,.12)}
+.splash-bar i{display:block;height:100%;background:var(--on-ink);transform:scaleX(var(--p,0));transform-origin:left}
+
+/* sengaja TANPA z-index: stacking context sendiri akan memutus mix-blend-mode dari kertas & uang di belakangnya */
+.splash-mark{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+.splash-mark span{
+  grid-area:1/1;white-space:nowrap;
+  font-weight:800;font-size:clamp(4.2rem,25vw,23rem);letter-spacing:-.06em;line-height:.8;
+}
+.mark-line{color:transparent;-webkit-text-stroke:3px var(--on-ink)}
+.mark-fill{color:#fff;mix-blend-mode:difference;clip-path:inset(calc(100% * (1 - var(--p,0))) 0 0 0)}
+
+.splash-hud{
+  position:absolute;top:22px;left:0;right:0;z-index:5;
+  padding:0 clamp(16px,3vw,34px);
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  font-family:var(--f-mono);font-size:.66rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+}
+.hud-l b{font-weight:800}
+.splash-skip{
+  border:var(--bw) solid var(--on-ink);border-radius:10px;
+  background:var(--ink);color:var(--on-ink);
+  padding:8px 14px;
+  font-family:var(--f-mono);font-size:.66rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  box-shadow:4px 4px 0 var(--on-ink);
+  transition:transform .15s var(--ease-out),box-shadow .15s var(--ease-out);
+}
+.splash-skip:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--on-ink)}
+.splash-skip:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--on-ink)}
+.splash-skip:focus-visible{outline:3px solid var(--on-ink);outline-offset:3px}
+
+.splash-stamp{
+  position:absolute;left:50%;top:27%;z-index:6;translate:-50% 0;rotate:-7deg;
+  font-family:var(--f-mono);font-weight:700;font-size:clamp(1rem,2.6vw,1.6rem);letter-spacing:.22em;white-space:nowrap;
+  padding:12px 20px;border:4px solid var(--on-ink);border-radius:12px;
+  background:var(--ink);color:var(--on-ink);box-shadow:7px 7px 0 var(--on-ink);
+  opacity:0;pointer-events:none;
+}
+.splash.is-stamp .splash-stamp{animation:splashStamp .5s var(--ease-spring) forwards}
+@keyframes splashStamp{
+  0%{opacity:0;transform:scale(2.6)}
+  55%{opacity:1;transform:scale(.94)}
+  100%{opacity:1;transform:scale(1)}
+}
+
+/* tepi bawah lembar bergerigi, seperti struk yang disobek */
+.splash-tear{
+  position:absolute;left:0;right:0;top:100%;height:16px;pointer-events:none;
+  background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='16' viewBox='0 0 28 16'><path d='M0 0h28L14 16z' fill='%23F3F1EA'/></svg>") repeat-x 0 0/28px 16px;
+}
+.splash.is-exit{animation:tearOff .95s cubic-bezier(.7,0,.2,1) forwards;pointer-events:none}
+.splash.is-exit.is-fast{animation-duration:.55s}
+@keyframes tearOff{
+  0%{transform:translateY(0)}
+  14%{transform:translateY(20px)}          /* ditarik sedikit ke bawah dulu, baru sobek ke atas */
+  100%{transform:translateY(calc(-100% - 40px))}
+}
+@media (max-width:640px){
+  .splash-hud{top:18px;font-size:.58rem;letter-spacing:.1em}
+  .splash-skip{padding:7px 11px;font-size:.6rem}
+}
+
 /* ============ FOCUS VISIBILITY ============ */
 .btn:focus-visible,.picker-btn:focus-visible,.picker-list button:focus-visible,.cal-nav:focus-visible,
 .cal-day:focus-visible,.seg-btn:focus-visible,.chip:focus-visible,.tx-del:focus-visible,
@@ -844,4 +925,5 @@ footer{margin-top:20px;border-top:var(--bw) solid var(--ink);background:var(--s1
   *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;scroll-behavior:auto !important}
   .js [data-reveal]:not(.in){opacity:1}
   .ticker-track{animation:none}
+  .splash{display:none !important}
 }

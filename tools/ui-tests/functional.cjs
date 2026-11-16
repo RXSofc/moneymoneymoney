@@ -83,7 +83,10 @@ function sampleData() {
 
   /* ---------- konteks utama ---------- */
   async function newContext(opts) {
-    const ctx = await browser.newContext(Object.assign({ viewport: { width: 1440, height: 900 }, acceptDownloads: true, permissions: ['clipboard-read', 'clipboard-write'] }, opts || {}));
+    const o = Object.assign({}, opts || {}); const wantIntro = !!o.intro; delete o.intro;
+    const ctx = await browser.newContext(Object.assign({ viewport: { width: 1440, height: 900 }, acceptDownloads: true, permissions: ['clipboard-read', 'clipboard-write'] }, o));
+    // tanpa opts.intro: anggap ini sesi lama supaya splash tidak menghalangi klik di tes lain
+    if (!wantIntro) await ctx.addInitScript(() => { try { sessionStorage.setItem('duitku_intro_v1', '1'); } catch (e) {} });
     const sheetCalls = [];
     await ctx.route('**/*', route => {
       const u = route.request().url();
@@ -324,6 +327,7 @@ function sampleData() {
     });
     await check('[gerak] jaring pengaman: kalau motion.js gagal dimuat, konten tetap tampil', async () => {
       const c = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+      await c.addInitScript(() => { try { sessionStorage.setItem('duitku_intro_v1', '1'); } catch (e) {} });
       await c.route('**/*', r => { const u = r.request().url(); if (u.endsWith('js/motion.js') || !u.startsWith(ORIGIN())) return r.abort(); return r.continue(); });
       const p = await c.newPage(); await p.goto(indexUrl); await p.waitForTimeout(3000);
       const hidden = await p.evaluate(() => [...document.querySelectorAll('[data-reveal]')].filter(e => getComputedStyle(e).opacity === '0').length);
@@ -337,6 +341,58 @@ function sampleData() {
       await p.mouse.move(box.x + box.width - 20, box.y + box.height - 20); await p.waitForTimeout(200);
       const b = await p.locator('.t-hero').evaluate(e => e.style.getPropertyValue('--sx'));
       ok(a && b && parseFloat(a) > parseFloat(b), 'sx kiri=' + a + ' kanan=' + b); await c.close();
+    });
+  }
+
+  /* ---------- splash intro (hanya kalau build memilikinya) ---------- */
+  if (fs.existsSync(path.join(projectDir, 'js/splash.js'))) {
+    await check('[splash] sesi baru: intro tampil menutupi app, halaman di belakangnya inert', async () => {
+      const { ctx: c } = await newContext({ intro: true }); const p = await c.newPage(); await p.goto(indexUrl); await p.waitForTimeout(500);
+      ok(await p.evaluate(() => !!document.getElementById('splash') && getComputedStyle(document.getElementById('splash')).display !== 'none'), 'splash tidak tampil');
+      ok(await p.evaluate(() => document.documentElement.classList.contains('splash-on')), 'class splash-on');
+      ok(await p.evaluate(() => document.querySelector('main').hasAttribute('inert')), 'main belum inert');
+      const hidden = await p.evaluate(() => [...document.querySelectorAll('[data-reveal]')].filter(e => e.classList.contains('in')).length);
+      eq(hidden, 0, 'tile tidak boleh mulai dicap selama splash masih penuh'); await c.close();
+    });
+    await check('[splash] canvas benar-benar menggambar uang yang jatuh', async () => {
+      const { ctx: c } = await newContext({ intro: true }); const p = await c.newPage(); await p.goto(indexUrl); await p.waitForTimeout(900);
+      const px = await p.locator('#splashCanvas').evaluate(cv => { const d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 0) n++; return n; });
+      ok(px > 2000, 'piksel uang terlalu sedikit: ' + px); await c.close();
+    });
+    await check('[splash] selesai sendiri (~3 dtk): hilang dari DOM, inert & kunci scroll dilepas, tile dicap masuk', async () => {
+      const { ctx: c } = await newContext({ intro: true }); const p = await c.newPage(); await p.goto(indexUrl);
+      await p.waitForFunction(() => !document.getElementById('splash'), null, { timeout: 6500 });
+      ok(!(await p.evaluate(() => document.documentElement.classList.contains('splash-on'))), 'splash-on tersisa');
+      ok(!(await p.evaluate(() => document.querySelector('main').hasAttribute('inert'))), 'main masih inert');
+      await p.waitForTimeout(900);
+      const shown = await p.evaluate(() => [...document.querySelectorAll('[data-reveal]')].filter(e => e.classList.contains('in')).length);
+      ok(shown >= 3, 'tile belum muncul setelah splash: ' + shown); await c.close();
+    });
+    await check('[splash] bisa dilewati: tombol Lewati, klik di mana saja, dan Escape', async () => {
+      for (const how of ['button', 'click', 'escape']) {
+        const { ctx: c } = await newContext({ intro: true }); const p = await c.newPage(); await p.goto(indexUrl); await p.waitForTimeout(350);
+        if (how === 'button') await p.click('#splashSkip'); else if (how === 'click') await p.mouse.click(400, 400); else await p.keyboard.press('Escape');
+        await p.waitForFunction(() => !document.getElementById('splash'), null, { timeout: 2500 });
+        await c.close();
+      }
+    });
+    await check('[splash] hanya sekali per sesi; ?intro memutarnya lagi', async () => {
+      const { ctx: c } = await newContext({ intro: true }); const p = await c.newPage(); await p.goto(indexUrl); await p.click('#splashSkip');
+      await p.waitForFunction(() => !document.getElementById('splash'), null, { timeout: 2500 });
+      await p.reload(); await p.waitForTimeout(400);
+      ok(!(await p.evaluate(() => document.documentElement.classList.contains('splash-on'))), 'splash muncul lagi di sesi yang sama');
+      await p.goto(indexUrl + '?intro'); await p.waitForTimeout(400);
+      ok(await p.evaluate(() => document.documentElement.classList.contains('splash-on')), '?intro tidak memaksa tampil'); await c.close();
+    });
+    await check('[splash] reduced-motion: intro tidak tampil sama sekali', async () => {
+      const { ctx: c } = await newContext({ intro: true, reducedMotion: 'reduce' }); const p = await c.newPage(); await p.goto(indexUrl); await p.waitForTimeout(400);
+      eq(await p.evaluate(() => !!document.getElementById('splash')), false, 'splash masih ada'); await c.close();
+    });
+    await check('[splash] fitur app tidak terganggu: simpan catatan tepat setelah intro dilewati', async () => {
+      const { ctx: c } = await newContext({ intro: true }); const p = await c.newPage(); await p.goto(indexUrl); await p.click('#splashSkip');
+      await p.waitForFunction(() => !document.getElementById('splash'), null, { timeout: 2500 }); await p.waitForTimeout(300);
+      await p.fill('#amount', '12345'); await p.click('#txForm button[type=submit]'); await p.waitForSelector('.toast.ok');
+      eq(await p.evaluate(() => JSON.parse(localStorage.getItem('duitku_tx_v1')).length), 1); await c.close();
     });
   }
 

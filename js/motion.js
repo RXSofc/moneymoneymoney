@@ -6,7 +6,7 @@
    aplikasi tetap di js/script.js, yang tidak disentuh sama sekali.
 
    Isi:
-   1. Reveal   — tile "dicap" masuk saat di-scroll (IntersectionObserver)
+   1. Reveal   — tile "dicap" masuk saat di-scroll (IntersectionObserver); menunggu splash selesai
    2. Ticker   — dua pita berlawanan arah; kecepatan & arahnya ngikutin scroll
    3. Scroll   — progress bar, header jadi pill, bintang berputar, teks raksasa di footer
    4. Pointer  — bayangan tile ngikutin kursor, tombol "magnetik"
@@ -35,16 +35,25 @@ function wrap(v,w){return w>0?((v%w)+w)%w:0}
   function showAll(){els.forEach(function(el){el.classList.add('in')})}
   if(reduce||!('IntersectionObserver' in window)){showAll();return}
 
-  var io=new IntersectionObserver(function(entries){
-    var batch=entries.filter(function(e){return e.isIntersecting});
-    // tile yang muncul bersamaan masuk berurutan, bukan serentak
-    batch.forEach(function(en,i){
-      en.target.style.setProperty('--d',(i*85)+'ms');
-      en.target.classList.add('in');
-      io.unobserve(en.target);
-    });
-  },{threshold:0.1,rootMargin:'0px 0px -5% 0px'});
-  els.forEach(function(el){io.observe(el)});
+  var started=false;
+  function start(){
+    if(started)return;started=true;
+    var io=new IntersectionObserver(function(entries){
+      var batch=entries.filter(function(e){return e.isIntersecting});
+      // tile yang muncul bersamaan masuk berurutan, bukan serentak
+      batch.forEach(function(en,i){
+        en.target.style.setProperty('--d',(i*85)+'ms');
+        en.target.classList.add('in');
+        io.unobserve(en.target);
+      });
+    },{threshold:0.1,rootMargin:'0px 0px -5% 0px'});
+    els.forEach(function(el){io.observe(el)});
+  }
+  // kalau splash sedang tampil, tile baru "dicap" masuk saat lembar struk mulai disobek
+  if(root.classList.contains('splash-on')){
+    window.addEventListener('duitku:splash-done',start,{once:true});
+    setTimeout(start,9500);        // jaring pengaman: jangan pernah menunggu selamanya
+  }else start();
 })();
 
 /* ================= 2 + 3. TICKER & SCROLL (satu loop rAF) ================= */

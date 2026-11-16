@@ -17,9 +17,39 @@ document.documentElement.classList.add('js');
 setTimeout(function(){
   if(!document.documentElement.classList.contains('motion-ready')) document.documentElement.classList.remove('js');
 },2500);
+/* Intro (splash) tampil sekali per sesi tab; ?intro memaksa tampil lagi; dilewati bila reduced-motion.
+   Class dipasang di sini (sebelum render pertama) supaya app tidak sempat berkedip sebelum intro. */
+(function(r){
+  try{
+    var force=/[?&]intro(=|&|$)/.test(location.search);
+    var seen=sessionStorage.getItem('duitku_intro_v1');
+    var calm=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(!calm&&(force||!seen)){
+      r.classList.add('splash-on');
+      setTimeout(function(){r.classList.remove('splash-on')},9000);   // jaring pengaman terakhir
+    }
+  }catch(e){}
+})(document.documentElement);
 </script>
 </head>
 <body>
+
+<!-- SPLASH "Struk Disobek": disembunyikan CSS kecuali <html> punya class .splash-on (lihat <head>) -->
+<div class="splash" id="splash" role="presentation">
+  <div class="splash-bar" aria-hidden="true"><i></i></div>
+  <canvas id="splashCanvas" aria-hidden="true"></canvas>
+  <div class="splash-mark" aria-hidden="true">
+    <span class="mark-line">DUITKU</span>
+    <span class="mark-fill">DUITKU</span>
+  </div>
+  <div class="splash-hud">
+    <span class="hud-l"><b>DuitKu</b> &middot; buku kas &middot; <span id="splashPct">0%</span></span>
+    <button type="button" class="splash-skip" id="splashSkip">Lewati &rsaquo;</button>
+  </div>
+  <div class="splash-stamp" aria-hidden="true">KAS DIBUKA</div>
+  <div class="splash-tear" aria-hidden="true"></div>
+</div>
+<script src="js/splash.js"></script>
 
 <div class="grain" aria-hidden="true"></div>
 <div class="scroll-bar" aria-hidden="true"><i id="scrollBar"></i></div>
