@@ -359,6 +359,15 @@ function sampleData() {
       const px = await p.locator('#splashCanvas').evaluate(cv => { const d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 0) n++; return n; });
       ok(px > 2000, 'piksel uang terlalu sedikit: ' + px); await c.close();
     });
+    await check('[splash] uang tidak diam di akhir: tumpukan runtuh keluar layar ketika lembar disobek', async () => {
+      const { ctx: c } = await newContext({ intro: true }); const p = await c.newPage(); await p.goto(indexUrl);
+      const live = () => p.evaluate(() => { const s = document.getElementById('splash'); return s ? parseInt(s.getAttribute('data-live') || '0', 10) : 0; });
+      await p.waitForSelector('.splash.is-stamp', { timeout: 5000 });
+      const before = await live(); ok(before > 40, 'tumpukan tidak terbentuk saat stempel: ' + before + ' item');
+      await p.waitForSelector('.splash.is-exit', { timeout: 5000 }); await p.waitForTimeout(350);
+      const after = await live();
+      ok(after < before * 0.2, 'uang masih menempel saat lembar disobek: ' + after + ' dari ' + before); await c.close();
+    });
     await check('[splash] selesai sendiri (~3 dtk): hilang dari DOM, inert & kunci scroll dilepas, tile dicap masuk', async () => {
       const { ctx: c } = await newContext({ intro: true }); const p = await c.newPage(); await p.goto(indexUrl);
       await p.waitForFunction(() => !document.getElementById('splash'), null, { timeout: 6500 });

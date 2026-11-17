@@ -712,7 +712,7 @@ html.splash-on{overflow:hidden;scrollbar-gutter:stable}
   font-weight:800;font-size:clamp(4.2rem,25vw,23rem);letter-spacing:-.06em;line-height:.8;
 }
 .mark-line{color:transparent;-webkit-text-stroke:3px var(--on-ink)}
-.mark-fill{color:#fff;mix-blend-mode:difference;clip-path:inset(calc(100% * (1 - var(--p,0))) 0 0 0)}
+.mark-fill{color:#fff;mix-blend-mode:difference;clip-path:inset(100% 0 0 0)}   /* js/splash.js menggantinya dengan polygon bergelombang tiap frame */
 
 .splash-hud{
   position:absolute;top:22px;left:0;right:0;z-index:5;
@@ -752,7 +752,7 @@ html.splash-on{overflow:hidden;scrollbar-gutter:stable}
   position:absolute;left:0;right:0;top:100%;height:16px;pointer-events:none;
   background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='16' viewBox='0 0 28 16'><path d='M0 0h28L14 16z' fill='%23F3F1EA'/></svg>") repeat-x 0 0/28px 16px;
 }
-.splash.is-exit{animation:tearOff .95s cubic-bezier(.7,0,.2,1) forwards;pointer-events:none}
+.splash.is-exit{animation:tearOff .85s cubic-bezier(.7,0,.2,1) forwards;pointer-events:none}
 .splash.is-exit.is-fast{animation-duration:.55s}
 @keyframes tearOff{
   0%{transform:translateY(0)}

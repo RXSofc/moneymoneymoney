@@ -111,24 +111,28 @@ garis buku kas, barcode), dan bentuk tile yang berbeda-beda, bukan dari warna:
 
 ### Splash intro — "Struk Disobek"
 
-Intro ~3 detik di `js/splash.js` (markup `#splash` di `index.html`, gaya di bagian SPLASH pada `css/style.css`):
+Intro ~3,5 detik di `js/splash.js` (markup `#splash` di `index.html`, gaya di bagian SPLASH pada `css/style.css`):
 
-1. Lembar struk putih; uang kertas & koin hitam jatuh sambil berputar lalu **menumpuk** di dasar layar (canvas 2D,
-   sprite digambar sekali, tumpukan disimpan di layer terpisah sehingga ringan).
-2. Wordmark **DUITKU** terisi dari bawah mengikuti progres. Teksnya putih + `mix-blend-mode: difference`, jadi otomatis
-   hitam di atas kertas dan putih di atas uang.
-3. Stempel **KAS DIBUKA** dicap.
-4. Seluruh lembar **disobek ke atas** dengan tepi bergerigi; tile app baru mulai "dicap" masuk saat lembar terangkat.
+1. Lembar struk putih; uang kertas & koin hitam jatuh. Kertas **melayang bergoyang** (miring searah ayunan), koin berputar,
+   ada **kedalaman** (jauh = kecil & pelan), dan tiap lembar **mendarat dengan pantulan kecil** lalu menumpuk (canvas 2D).
+2. Wordmark **DUITKU** terisi dari bawah seperti **cairan bergelombang**. Teksnya putih + `mix-blend-mode: difference`,
+   jadi otomatis hitam di atas kertas dan putih di atas uang.
+3. Stempel **KAS DIBUKA** dicap; tumpukan uang **tersentak** karena hentakannya.
+4. Laci kas terbuka: tumpukan bergemuruh sebentar lalu **runtuh**, uang jatuh berhamburan keluar layar (dari bawah,
+   menyebar dari tengah). Uang tidak pernah diam menempel di akhir.
+5. Lembar disobek ke atas dengan tepi bergerigi **setelah uangnya habis**; tile app mulai "dicap" masuk saat lembar terangkat.
 
 Perilaku:
 
 - Tampil **sekali per sesi tab** (`sessionStorage` `duitku_intro_v1`). Tambahkan **`?intro`** di URL untuk memutarnya lagi.
-- Bisa dilewati: tombol **Lewati**, klik/tap di mana saja, Enter, Spasi, atau Esc.
+- Bisa dilewati: tombol **Lewati**, klik/tap di mana saja, Enter, Spasi, atau Esc (uang tetap runtuh sambil lembar disobek).
 - Tidak tampil sama sekali bila `prefers-reduced-motion` aktif.
 - Selama intro, header/main/footer di-set `inert` (fokus keyboard tidak nyasar ke balik layar) dan scroll dikunci.
+- Aman di perangkat lambat: fisika mengejar waktu nyata, dan sobekan menunggu uangnya habis (dengan batas waktu).
 - Jaring pengaman berlapis: tanpa canvas intro dilewati; kalau `splash.js` gagal, class penutup dicabut otomatis (9 dtk).
 - Jumlah uang dibatasi proyeksi tinggi tumpukan (maks. kira-kira sepertiga layar) supaya wordmark selalu terbaca, di
-  desktop maupun HP. Atur lewat `PILE_TARGET`, `T_SPAWN`, `T_EXIT` di bagian atas `splash.js`.
+  desktop maupun HP. Atur lewat `PILE_TARGET` dan konstanta waktu `T_*` di bagian atas `splash.js`.
+- Atribut `data-live` di `#splash` berisi jumlah uang yang masih di layar; dipakai tes untuk membuktikan uang habis.
 
 Tidak menyentuh data aplikasi; satu-satunya yang ditulis adalah flag sessionStorage di atas.
 
@@ -137,7 +141,7 @@ Tidak menyentuh data aplikasi; satu-satunya yang ditulis adalah flag sessionStor
 ```bash
 cd tools/ui-tests
 npm install && npx playwright install chromium
-npm test              # 46 tes: fungsi, responsif (1440 -> 320px), animasi, reduced-motion
+npm test              # 47 tes: fungsi, responsif (1440 -> 320px), animasi, reduced-motion
 npm run test:shots    # + screenshot desktop/tablet/mobile ke ./shots
 ```
 
