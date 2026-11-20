@@ -117,7 +117,7 @@ Intro ~3,5 detik di `js/splash.js` (markup `#splash` di `index.html`, gaya di ba
    ada **kedalaman** (jauh = kecil & pelan), dan tiap lembar **mendarat dengan pantulan kecil** lalu menumpuk (canvas 2D).
 2. Wordmark **DUITKU** terisi dari bawah seperti **cairan bergelombang**. Teksnya putih + `mix-blend-mode: difference`,
    jadi otomatis hitam di atas kertas dan putih di atas uang.
-3. Stempel **KAS DIBUKA** dicap; tumpukan uang **tersentak** karena hentakannya.
+3. **Perangko** berperforasi berisi simbol logo DuitKu & nilai "Rp 1.000" menghantam layar (gelombang kejut), lalu **cap pos** (cincin + garis gelombang) tergambar menyapu menimpanya; tumpukan uang **tersentak** karena hentakannya.
 4. Laci kas terbuka: tumpukan bergemuruh sebentar lalu **runtuh**, uang jatuh berhamburan keluar layar (dari bawah,
    menyebar dari tengah). Uang tidak pernah diam menempel di akhir.
 5. Lembar disobek ke atas dengan tepi bergerigi **setelah uangnya habis**; tile app mulai "dicap" masuk saat lembar terangkat.
@@ -125,7 +125,7 @@ Intro ~3,5 detik di `js/splash.js` (markup `#splash` di `index.html`, gaya di ba
 Perilaku:
 
 - Tampil **sekali per sesi tab** (`sessionStorage` `duitku_intro_v1`). Tambahkan **`?intro`** di URL untuk memutarnya lagi.
-- Bisa dilewati: tombol **Lewati**, klik/tap di mana saja, Enter, Spasi, atau Esc (uang tetap runtuh sambil lembar disobek).
+- Bisa dilewati tanpa tombol: klik/tap di mana saja, Enter, Spasi, atau Esc (uang tetap runtuh sambil lembar disobek).
 - Tidak tampil sama sekali bila `prefers-reduced-motion` aktif.
 - Selama intro, header/main/footer di-set `inert` (fokus keyboard tidak nyasar ke balik layar) dan scroll dikunci.
 - Aman di perangkat lambat: fisika mengejar waktu nyata, dan sobekan menunggu uangnya habis (dengan batas waktu).
@@ -141,7 +141,7 @@ Tidak menyentuh data aplikasi; satu-satunya yang ditulis adalah flag sessionStor
 ```bash
 cd tools/ui-tests
 npm install && npx playwright install chromium
-npm test              # 47 tes: fungsi, responsif (1440 -> 320px), animasi, reduced-motion
+npm test              # 50 tes: fungsi, responsif (1440 -> 320px), animasi, reduced-motion
 npm run test:shots    # + screenshot desktop/tablet/mobile ke ./shots
 ```
 
@@ -150,3 +150,19 @@ localStorage) lolos di keduanya. (Tes karakter 3D hanya ada di versi lama; fitur
 
 > **Catatan:** karakter 3D di tile "Keluar & Tabungan" sudah dihapus sepenuhnya (kode sprite di `script.js`,
 > `assets/char/`, `assets/source/` dan `tools/render-frames/`). Seluruh bagian lain `script.js` tidak berubah.
+
+## Logo & ikon tab browser
+
+Simbol: huruf **D** tebal dengan **tanda seru sebagai ruang negatif** ("Duit!"), kelanjutan dari badge "D!" di header.
+Satu bidang hitam, satu ide, tanpa teks hidup (semua path).
+
+| File | Isi |
+|---|---|
+| `favicon.ico` | 16 / 32 / 48 px (PNG tertanam). Versi 16 px digambar per piksel supaya tajam |
+| `assets/icons/favicon-16x16.png`, `favicon-32x32.png` | dipilih browser sesuai kerapatan layar |
+| `assets/icons/apple-touch-icon.png` | 180 px, latar penuh (iOS yang membulatkan sudutnya) |
+| `assets/icons/icon-192.png`, `icon-512.png` + `site.webmanifest` | ikon "install ke layar utama" |
+| `assets/icons/favicon.svg` | master ubin (krem + garis tebal + bayangan keras), potongan "ukuran kecil" dengan tanda seru lebih tebal |
+| `assets/icons/logo-mark.svg` | master simbol polos 256x256, hitam satu warna |
+
+Tag `<link>`-nya ada di `<head>` `index.html`.

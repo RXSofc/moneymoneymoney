@@ -1,0 +1,31 @@
+/* STAMP: perangko berperforasi + cap pos.
+   Bukan label persegi bertulisan lagi: perangko (tepi bergerigi bolong-bolong) berisi simbol logo DuitKu & nilai "Rp 1.000".
+   Saat dicap: menghantam dari besar -> ada gelombang kejut -> cincin & garis cap pos tergambar menyapu menimpa perangko.
+   Dipicu class .is-stamp di #splash (ditambahkan js/splash.js; tidak ada perubahan JS). */
+.splash-stamp{
+  position:absolute;left:50%;top:15%;z-index:6;translate:-50% 0;rotate:-9deg;
+  width:clamp(150px,15vw,214px);pointer-events:none;opacity:0;
+}
+.splash-stamp svg{display:block;width:100%;height:auto;overflow:visible}
+.st-mono{font-family:var(--f-mono);font-size:11px;font-weight:700;letter-spacing:.14em;fill:#0A0A0A}
+.st-val{font-family:var(--f-body);font-size:34px;font-weight:800;letter-spacing:-.04em;fill:#0A0A0A}
+.stamp-shock{position:absolute;left:50%;top:50%;width:100%;aspect-ratio:1;border:4px solid var(--on-ink);border-radius:50%;translate:-50% -50%;opacity:0;scale:.4}
+.st-pm path,.st-pm circle{stroke-dasharray:1;stroke-dashoffset:1}
+.splash.is-stamp .splash-stamp{animation:stampHit .62s var(--ease-spring) forwards}
+.splash.is-stamp .stamp-shock{animation:stampShock .6s cubic-bezier(.2,.7,.2,1) .08s forwards}
+.splash.is-stamp .st-pm circle{animation:pmDraw .45s cubic-bezier(.3,.7,.2,1) .34s forwards}
+.splash.is-stamp .st-pm path{animation:pmDraw .6s cubic-bezier(.3,.7,.2,1) .46s forwards}
+.splash.is-stamp .st-pm path:nth-of-type(2){animation-delay:.52s}
+.splash.is-stamp .st-pm path:nth-of-type(3){animation-delay:.58s}
+.splash.is-stamp .st-pm path:nth-of-type(4){animation-delay:.64s}
+@keyframes stampHit{
+  0%{opacity:0;transform:scale(2.9) rotate(14deg)}
+  42%{opacity:1;transform:scale(.9) rotate(-3deg)}       /* menghantam & sedikit menekan */
+  64%{transform:scale(1.04) rotate(1deg)}
+  100%{opacity:1;transform:scale(1) rotate(0)}
+}
+@keyframes stampShock{0%{opacity:.7;scale:.4}100%{opacity:0;scale:2.3}}
+@keyframes pmDraw{to{stroke-dashoffset:0}}
+
+/* tambahan di dalam @media (max-width:640px) */
+.splash-stamp{width:clamp(128px,36vw,170px);top:12%}

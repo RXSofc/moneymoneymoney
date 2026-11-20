@@ -263,6 +263,31 @@ function sampleData() {
   await check('tidak ada error JS selama seluruh skenario', async () => { ok(errors.length === 0, errors.join(' | ')); });
   await ctx.close();
 
+  /* ---------- ikon tab browser (favicon) ---------- */
+  await check('[favicon] tag <link> lengkap & semua file ikon bisa diambil (ico, png 16/32, apple-touch, manifest)', async () => {
+    const { ctx: c } = await newContext(); const p = await c.newPage(); await p.goto(indexUrl);
+    const hrefs = await p.evaluate(() => [...document.querySelectorAll('link[rel~=icon], link[rel=apple-touch-icon], link[rel=manifest]')].map(l => l.getAttribute('rel') + '|' + (l.getAttribute('sizes') || '') + '|' + l.getAttribute('href')));
+    ok(hrefs.length >= 5, 'link ikon kurang: ' + hrefs.join(' ; '));
+    for (const h of hrefs) {
+      const href = h.split('|')[2];
+      // Chromium headless menolak fetch('/favicon.ico') dari skrip halaman (artefak harness); ICO dicek lewat file + tes struktur di bawah
+      if (/favicon\.ico$/.test(href)) { ok(fs.statSync(path.join(projectDir, href)).size > 500, 'favicon.ico kosong'); continue; }
+      const res = await p.evaluate(async u => { const r = await fetch(u); return { ok: r.ok, ct: r.headers.get('content-type'), n: (await r.arrayBuffer()).byteLength }; }, href);
+      ok(res.ok && res.n > 80, 'gagal memuat ' + href);
+    }
+    await c.close();
+  });
+  await check('[favicon] favicon.ico berisi 3 ukuran (16/32/48), PNG-nya valid; manifest JSON valid dengan ikon 192 & 512', async () => {
+    const ico = fs.readFileSync(path.join(projectDir, 'favicon.ico'));
+    eq(ico.readUInt16LE(2), 1, 'bukan file ICO'); eq(ico.readUInt16LE(4), 3, 'jumlah ukuran di ICO');
+    const sizes = [0, 1, 2].map(i => ico[6 + i * 16]).sort((a, b) => a - b); eq(sizes.join(), '16,32,48');
+    for (const f of ['favicon-16x16.png', 'favicon-32x32.png', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png']) {
+      const b = fs.readFileSync(path.join(projectDir, 'assets/icons', f)); ok(b.slice(1, 4).toString() === 'PNG', f + ' bukan PNG valid');
+    }
+    const m = JSON.parse(fs.readFileSync(path.join(projectDir, 'site.webmanifest'), 'utf8'));
+    ok(m.icons.some(i => i.sizes === '192x192') && m.icons.some(i => i.sizes === '512x512'), 'ikon manifest'); eq(m.short_name, 'DuitKu');
+  });
+
   /* ---------- responsif: tidak ada scroll horizontal ---------- */
   for (const w of [1440, 1024, 768, 390, 320]) {
     await check('[responsif] tanpa overflow horizontal @' + w, async () => {
@@ -377,16 +402,31 @@ function sampleData() {
       const shown = await p.evaluate(() => [...document.querySelectorAll('[data-reveal]')].filter(e => e.classList.contains('in')).length);
       ok(shown >= 3, 'tile belum muncul setelah splash: ' + shown); await c.close();
     });
-    await check('[splash] bisa dilewati: tombol Lewati, klik di mana saja, dan Escape', async () => {
-      for (const how of ['button', 'click', 'escape']) {
+    await check('[splash] tidak ada tombol Lewati yang terlihat', async () => {
+      const { ctx: c } = await newContext({ intro: true }); const p = await c.newPage(); await p.goto(indexUrl); await p.waitForTimeout(400);
+      eq(await p.locator('#splashSkip, .splash-skip, #splash button').count(), 0, 'masih ada tombol di splash');
+      ok(!(await p.locator('#splash').innerText()).toLowerCase().includes('lewati'), 'teks "Lewati" masih tampil'); await c.close();
+    });
+    await check('[splash] masih bisa dilewati tanpa tombol: klik di mana saja, Enter, dan Escape', async () => {
+      for (const how of ['click', 'enter', 'escape']) {
         const { ctx: c } = await newContext({ intro: true }); const p = await c.newPage(); await p.goto(indexUrl); await p.waitForTimeout(350);
-        if (how === 'button') await p.click('#splashSkip'); else if (how === 'click') await p.mouse.click(400, 400); else await p.keyboard.press('Escape');
+        if (how === 'click') await p.mouse.click(400, 400); else await p.keyboard.press(how === 'enter' ? 'Enter' : 'Escape');
         await p.waitForFunction(() => !document.getElementById('splash'), null, { timeout: 2500 });
         await c.close();
       }
     });
+    await check('[splash] stamp baru: perangko bergambar logo (bukan teks "KAS DIBUKA"), muncul saat dicap & garis cap pos tergambar', async () => {
+      const { ctx: c } = await newContext({ intro: true }); const p = await c.newPage(); await p.goto(indexUrl);
+      ok(!(await p.content()).includes('KAS DIBUKA'), 'teks lama "KAS DIBUKA" masih ada di halaman');
+      eq(await p.locator('.splash-stamp svg').count(), 1, 'stamp bukan SVG perangko');
+      eq(await p.locator('.splash-stamp .st-pm path').count(), 4, 'garis cap pos');
+      await p.waitForSelector('.splash.is-stamp', { timeout: 6000 }); await p.waitForTimeout(1300);
+      const o = await p.evaluate(() => { const st = document.querySelector('.splash-stamp'); if (!st) return null; const r = st.getBoundingClientRect(); const pm = [...st.querySelectorAll('.st-pm path')].map(x => parseFloat(getComputedStyle(x).strokeDashoffset)); return { op: getComputedStyle(st).opacity, w: r.width, pm }; });
+      if (o) { ok(parseFloat(o.op) > 0.9, 'stamp tidak terlihat: ' + o.op); ok(o.w > 100, 'stamp terlalu kecil: ' + o.w); ok(o.pm.every(v => v < 0.2), 'garis cap pos belum tergambar: ' + o.pm); }
+      await c.close();
+    });
     await check('[splash] hanya sekali per sesi; ?intro memutarnya lagi', async () => {
-      const { ctx: c } = await newContext({ intro: true }); const p = await c.newPage(); await p.goto(indexUrl); await p.click('#splashSkip');
+      const { ctx: c } = await newContext({ intro: true }); const p = await c.newPage(); await p.goto(indexUrl); await p.waitForTimeout(300); await p.mouse.click(400, 400);
       await p.waitForFunction(() => !document.getElementById('splash'), null, { timeout: 2500 });
       await p.reload(); await p.waitForTimeout(400);
       ok(!(await p.evaluate(() => document.documentElement.classList.contains('splash-on'))), 'splash muncul lagi di sesi yang sama');
@@ -398,7 +438,7 @@ function sampleData() {
       eq(await p.evaluate(() => !!document.getElementById('splash')), false, 'splash masih ada'); await c.close();
     });
     await check('[splash] fitur app tidak terganggu: simpan catatan tepat setelah intro dilewati', async () => {
-      const { ctx: c } = await newContext({ intro: true }); const p = await c.newPage(); await p.goto(indexUrl); await p.click('#splashSkip');
+      const { ctx: c } = await newContext({ intro: true }); const p = await c.newPage(); await p.goto(indexUrl); await p.waitForTimeout(300); await p.mouse.click(400, 400);
       await p.waitForFunction(() => !document.getElementById('splash'), null, { timeout: 2500 }); await p.waitForTimeout(300);
       await p.fill('#amount', '12345'); await p.click('#txForm button[type=submit]'); await p.waitForSelector('.toast.ok');
       eq(await p.evaluate(() => JSON.parse(localStorage.getItem('duitku_tx_v1')).length), 1); await c.close();
